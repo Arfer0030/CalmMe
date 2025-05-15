@@ -46,23 +46,25 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.calmme.R
+import com.example.calmme.commons.Routes
 import com.example.calmme.data.CategoryData
 import com.example.calmme.data.categoryList
 import com.example.calmme.data.moods
 
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier) {
+fun HomeScreen(navController: NavController, modifier: Modifier = Modifier) {
     Box(
         modifier = Modifier
             .background(
                 Brush.linearGradient(
-                    0.0f to Color(0xffe4dfc6),   // Kuning
-                    0.3f to Color(0xffd3c6de),   // Ungu muda
-                    0.5f to Color(0xffCEBFE6),   // Gradasi ungu tua
+                    0.0f to Color(0xffe4dfc6),
+                    0.3f to Color(0xffd3c6de),
+                    0.5f to Color(0xffCEBFE6),
                     0.7f to Color(0xffc8ceec),
-                    1.0f to Color(0xffc2ddf2),   // Biru muda
-                    start = Offset(0f, 0f),    // Ubah nilai ini untuk kemiringan
+                    1.0f to Color(0xffc2ddf2),
+                    start = Offset(0f, 0f),
                     end = Offset(900f, 800f),
                 )
             )
@@ -72,14 +74,14 @@ fun HomeScreen(modifier: Modifier = Modifier) {
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item { HeaderSection() }
+            item { HeaderSection(navController) }
             item { ForYouSection() }
         }
     }
 }
 
 @Composable
-fun HeaderSection() {
+fun HeaderSection(navController: NavController) {
         Column {
             Spacer(
                 modifier = Modifier.padding(vertical = 14.dp),
@@ -96,6 +98,7 @@ fun HeaderSection() {
                         painter = painterResource(id=R.drawable.profile),
                         contentDescription = "Profile",
                         modifier = Modifier.size(72.dp)
+                            .clickable { navController.navigate(Routes.Authentication.route)}
                     )
                     Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
                         Text("Good Morning,", fontSize = 12.sp)
@@ -108,7 +111,7 @@ fun HeaderSection() {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_notif),
                         contentDescription = "Notification",
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(26.dp)
                     )
                 }
             }
@@ -163,7 +166,7 @@ fun ForYouSection() {
         modifier = Modifier
             .fillMaxSize()
             .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-            .background(Color.White) // Background putih rounded
+            .background(Color.White)
             .padding(24.dp)
     ) {
         Row(
@@ -290,7 +293,7 @@ fun CategorySection() {
         // Grid View
         LazyVerticalStaggeredGrid (
             columns = StaggeredGridCells.Fixed(2),
-            modifier = Modifier.height(550.dp), // Sesuaikan tinggi
+            modifier = Modifier.height(550.dp),
             contentPadding = PaddingValues(4.dp),
             verticalItemSpacing = 12.dp,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
