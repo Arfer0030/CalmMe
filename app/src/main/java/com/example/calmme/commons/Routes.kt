@@ -1,12 +1,14 @@
 package com.example.calmme.commons
 
-object Routes {
-    const val Home = "home"
-    const val Consultation = "consultation"
-    const val Community = "community"
-    const val Meditate = "meditate"
-    const val DailyMood = "dailymood"
-    const val Profile = "profile"
-    const val Authentication = "authentication"
-    const val History = "history"
+import kotlinx.serialization.Serializable
+
+sealed class Routes(val route: String) {
+    object Authentication : Routes("authentication")
+    object Home : Routes("home")
+    object Consultation : Routes("consultation")
+    object Community : Routes("community")
+    object History : Routes("history")
+    object Meditate : Routes("meditate")
+    object DailyMood : Routes("dailymood")
+    object Profile : Routes("profile")
 }
