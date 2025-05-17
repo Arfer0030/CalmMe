@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1070289365742",
+    "project_id": "calmme-1c787",
+    "storage_bucket": "calmme-1c787.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1070289365742:android:712483f9d64183698ba1ff",
+        "android_client_info": {
+          "package_name": "com.example.calmme"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDxSuLXOCoJ8Z364dvvgjj1XT3gWsfgb94"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
