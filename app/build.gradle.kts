@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     kotlin("plugin.serialization") version "2.1.20"
+    alias(libs.plugins.google.gms.google.services)
 }
 
 android {
@@ -52,6 +53,8 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.material3)
     implementation(libs.androidx.foundation.layout.android)
+    implementation(libs.firebase.auth)
+    implementation(libs.androidx.runtime.livedata)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

@@ -26,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -41,13 +42,11 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.calmme.R
+import com.example.calmme.commons.LocalNavController
 
 @Composable
-fun AuthScreen(navController: NavHostController) {
+fun AuthScreen(authViewModel: AuthViewModel) {
     var isLogin by remember { mutableStateOf(true) }
-    Scaffold {
-
-    }
 
     Box(
         modifier = Modifier
@@ -64,24 +63,21 @@ fun AuthScreen(navController: NavHostController) {
             verticalArrangement = Arrangement.spacedBy(24.dp),
             modifier = Modifier.fillMaxHeight(0.8f)
         ) {
-            // Logo atau Judul
             Text(
                 text = "CalmMe",
                 style = MaterialTheme.typography.headlineMedium,
                 color = Color.Black
             )
 
-            // Tab Switcher
             AuthTabSwitcher(
                 isLogin = isLogin,
                 onTabSelected = { isLogin = it }
             )
 
-            // Form Login atau Register
             if (isLogin) {
-                LoginScreen()
+                LoginScreen(onSwitchToRegister = { isLogin = false }, authViewModel = authViewModel)
             } else {
-                RegisterScreen()
+                RegisterScreen(onSwitchToLogin = { isLogin = true }, authViewModel = authViewModel)
             }
         }
     }
@@ -124,9 +120,13 @@ fun AuthTabSwitcher(isLogin: Boolean, onTabSelected: (Boolean) -> Unit) {
 }
 
 @Composable
-fun AuthButton(text: String) {
+fun AuthButton(text: String, route: String, authViewModel: AuthViewModel, onClick: () -> Unit) {
+    val navController = LocalNavController.current
+    val authState = authViewModel.authState.observeAsState()
+
     Button(
-        onClick = { /* Handle click */ },
+        enabled = authState.value != AuthState.Loading,
+        onClick = onClick,
         modifier = Modifier
             .height(43.dp)
             .width(240.dp)
@@ -137,14 +137,20 @@ fun AuthButton(text: String) {
     }
 }
 
+
 @Composable
-fun AuthTextField(hint: String, icon: Int, isPassword: Boolean = false) {
-    var text by remember { mutableStateOf("") }
+fun AuthTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    hint: String,
+    icon: Int,
+    isPassword: Boolean = false
+) {
     var passwordVisible by remember { mutableStateOf(false) }
 
     OutlinedTextField(
-        value = text,
-        onValueChange = { text = it },
+        value = value,
+        onValueChange = onValueChange,
         placeholder = { Text(hint) },
         leadingIcon = {
             Icon(
@@ -176,8 +182,9 @@ fun AuthTextField(hint: String, icon: Int, isPassword: Boolean = false) {
     Spacer(modifier = Modifier.height(8.dp))
 }
 
+
 @Composable
-fun AuthBottomText(text: String, textbutton:String){
+fun AuthBottomText(text: String, textbutton:String, onTabSwitch: () -> Unit){
     Row(
         modifier = Modifier.fillMaxWidth().padding(16.dp),
         horizontalArrangement = Arrangement.Center,
@@ -186,7 +193,9 @@ fun AuthBottomText(text: String, textbutton:String){
         Text(text = text)
         TextButton(
             modifier = Modifier.padding(start = 0.dp),
-            onClick = { }
+            onClick = {
+                onTabSwitch()
+            }
         )
         {
             Text(text = textbutton, color = Color(0xFFB68AD6))

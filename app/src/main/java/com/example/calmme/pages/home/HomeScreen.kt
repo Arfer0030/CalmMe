@@ -35,6 +35,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,15 +51,33 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.calmme.R
+import com.example.calmme.commons.LocalNavController
 import com.example.calmme.commons.Routes
 import com.example.calmme.data.CategoryData
 import com.example.calmme.data.categoryList
 import com.example.calmme.data.moods
+import com.example.calmme.pages.authentication.AuthState
+import com.example.calmme.pages.authentication.AuthViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
-fun HomeScreen(navController: NavController, modifier: Modifier = Modifier) {
+fun HomeScreen(modifier: Modifier = Modifier, authViewModel: AuthViewModel) {
+    val navController = LocalNavController.current
+    val auth = FirebaseAuth.getInstance()
+    val user = auth.currentUser
+    val authState by authViewModel.authState.observeAsState()
+
+    // Navigasi otomatis ketika status tidak terotentikasi
+    LaunchedEffect(authState) {
+        if (authState == AuthState.Unauthenticated) {
+            navController.navigate(Routes.Authentication.route) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
+
     Box(
-        modifier = Modifier
+        modifier
             .background(
                 Brush.linearGradient(
                     0.0f to Color(0xffe4dfc6),
@@ -70,66 +91,76 @@ fun HomeScreen(navController: NavController, modifier: Modifier = Modifier) {
             )
     ) {
         LazyColumn(
-            modifier = modifier
+            modifier
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item { HeaderSection(navController) }
+            item { HeaderSection(user?.displayName ?: "Guest", authViewModel = authViewModel) }
             item { ForYouSection() }
         }
     }
 }
 
+
 @Composable
-fun HeaderSection(navController: NavController) {
-        Column {
-            Spacer(
-                modifier = Modifier.padding(vertical = 14.dp),
-            )
+fun HeaderSection(username: String, modifier: Modifier = Modifier, authViewModel: AuthViewModel) {
+    val navController = LocalNavController.current
+    Column {
+        Spacer(
+            modifier.padding(vertical = 14.dp),
+        )
+        Row(
+            modifier.fillMaxWidth().padding(horizontal = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding( horizontal = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Row (
-                    verticalAlignment = Alignment.Top,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ){
-                    Image(
-                        painter = painterResource(id=R.drawable.profile),
-                        contentDescription = "Profile",
-                        modifier = Modifier.size(72.dp)
-                            .clickable { navController.navigate(Routes.Authentication.route)}
-                    )
-                    Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
-                        Text("Good Morning,", fontSize = 12.sp)
-                        Text("Alvin!", fontSize = 12.sp,fontWeight = FontWeight.Bold)
-                    }
-                }
-                IconButton(
-                    onClick = {},
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_notif),
-                        contentDescription = "Notification",
-                        modifier = Modifier.size(26.dp)
-                    )
+                Image(
+                    painter = painterResource(id = R.drawable.profile),
+                    contentDescription = "Profile",
+                    modifier.size(72.dp)
+                        .clickable {
+                            navController.navigate(Routes.Profile.route)
+                        }
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
+                    Text("Good Morning,", fontSize = 12.sp)
+                    Text("$username!", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
             }
-            MoodSection()
+            IconButton(
+                onClick = {
+                    authViewModel.logout {
+                        // Navigasi ke Authentication dan hapus stack
+                        navController.navigate(Routes.Authentication.route) {
+                            popUpTo(0) { inclusive = true }
+                        }}
+                },
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_notif),
+                    contentDescription = "Notification",
+                    modifier.size(26.dp)
+                )
+            }
         }
+        MoodSection()
     }
+}
 
 
 @Composable
-fun MoodSection() {
+fun MoodSection(modifier: Modifier = Modifier) {
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("how are you today?", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+        Text("how are you today?", fontSize = 20.sp, fontWeight = FontWeight.Bold)
 
         LazyRow(
-            modifier = Modifier
+            modifier
                 .fillMaxWidth()
                 .padding(vertical = 2.dp, horizontal = 24.dp),
             horizontalArrangement = Arrangement.spacedBy(30.dp)
@@ -142,14 +173,13 @@ fun MoodSection() {
 }
 
 @Composable
-fun MoodItem(name: String, icon: Int) {
+fun MoodItem(modifier: Modifier = Modifier,name: String, icon: Int) {
     Column(
+        modifier.width(80.dp)
+            .padding(vertical = 8.dp)
+            .clickable {  },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = Modifier
-            .width(80.dp)
-            .padding(vertical = 8.dp)
-            .clickable {  }
     ) {
         Image(
             painter = painterResource(id = icon),
@@ -161,16 +191,16 @@ fun MoodItem(name: String, icon: Int) {
 }
 
 @Composable
-fun ForYouSection() {
+fun ForYouSection(modifier: Modifier = Modifier) {
     Column(
-        modifier = Modifier
+        modifier
             .fillMaxSize()
             .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
             .background(Color.White)
             .padding(24.dp)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -188,7 +218,7 @@ fun ForYouSection() {
             )
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier.height(12.dp))
 
         Card(
             shape = RoundedCornerShape(16.dp),
@@ -198,7 +228,7 @@ fun ForYouSection() {
                 .clickable { }
         ) {
             Box(
-                modifier = Modifier
+                modifier
                     .background(
                         Brush.linearGradient(
                             0.0f to Color(0xFFdaf0d2),
@@ -212,7 +242,7 @@ fun ForYouSection() {
                     )
             ) {
                 Row(
-                    modifier = Modifier
+                    modifier
                         .fillMaxSize()
                         .padding(16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -224,14 +254,14 @@ fun ForYouSection() {
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold
                         )
-                        Spacer(modifier = Modifier.height(14.dp))
+                        Spacer(modifier.height(14.dp))
                         Text(
                             text = "Upgrade to premium\nget more profit\nnow!",
                             fontSize = 20.sp,
                             color = Color(0xff863D3D),
                             fontWeight = FontWeight.Bold
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier.height(16.dp))
                         Icon(
                             painter = painterResource(id = R.drawable.ic_arrow),
                             contentDescription = "Notification",
@@ -242,19 +272,19 @@ fun ForYouSection() {
                         Image(
                             painter = painterResource(id = R.drawable.foryou_1),
                             contentDescription = "Premium",
-                            modifier = Modifier.size(80.dp)
+                            modifier.size(80.dp)
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Image(
                             painter = painterResource(id = R.drawable.foryou_2),
                             contentDescription = "Premium",
-                            modifier = Modifier.size(67.dp)
+                            modifier.size(67.dp)
                         )
                     }
                 }
             }
         }
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier.height(16.dp))
         CategorySection()
     }
 }
@@ -262,15 +292,15 @@ fun ForYouSection() {
 
 
 @Composable
-fun CategorySection() {
+fun CategorySection(modifier: Modifier = Modifier) {
     Column(
-        modifier = Modifier
+        modifier
             .fillMaxWidth()
             .padding(2.dp)
     ) {
         // Header Section
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -284,16 +314,18 @@ fun CategorySection() {
                 text = "See all",
                 fontSize = 14.sp,
                 color = Color(0xFF933C9F),
-                modifier = Modifier.clickable { }
+                modifier = modifier.clickable {
+
+                },
             )
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier.height(12.dp))
 
         // Grid View
         LazyVerticalStaggeredGrid (
             columns = StaggeredGridCells.Fixed(2),
-            modifier = Modifier.height(550.dp),
+            modifier.height(550.dp),
             contentPadding = PaddingValues(4.dp),
             verticalItemSpacing = 12.dp,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -312,17 +344,17 @@ fun CategorySection() {
 
 
 @Composable
-fun CategoryItem(category: CategoryData, isLarge: Boolean) {
+fun CategoryItem(modifier: Modifier = Modifier, category: CategoryData, isLarge: Boolean) {
     Card(
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = Modifier
+        modifier
             .fillMaxWidth()
             .height(if (isLarge) 180.dp else 150.dp) // Ukuran berbeda
-            .clickable {  }
+            .clickable {  },
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Box(
-            modifier = Modifier
+            modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
@@ -334,7 +366,7 @@ fun CategoryItem(category: CategoryData, isLarge: Boolean) {
                 )
         ) {
             Column(
-                modifier = Modifier
+                modifier
                     .padding(12.dp)
                     .fillMaxSize(),
                 verticalArrangement = Arrangement.SpaceBetween
@@ -348,7 +380,7 @@ fun CategoryItem(category: CategoryData, isLarge: Boolean) {
                 Image(
                     painter = painterResource(id = category.icon),
                     contentDescription = category.name,
-                    modifier = Modifier.size(75.dp).align(Alignment.End)
+                    modifier.size(75.dp).align(Alignment.End)
                 )
             }
         }
