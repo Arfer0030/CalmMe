@@ -23,8 +23,6 @@ import com.example.calmme.R
 import com.example.calmme.pages.assesment.AssesmentScreen
 import com.example.calmme.pages.authentication.AuthScreen
 import com.example.calmme.pages.authentication.AuthViewModel
-import com.example.calmme.pages.authentication.LoginScreen
-import com.example.calmme.pages.authentication.RegisterScreen
 import com.example.calmme.pages.community.CommunityScreen
 import com.example.calmme.pages.consultation.AppointmentScreen
 import com.example.calmme.pages.consultation.ConsultationScreen
