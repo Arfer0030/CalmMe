@@ -2,6 +2,8 @@ package com.example.calmme.data
 
 import androidx.compose.ui.graphics.Color
 import com.example.calmme.R
+import com.example.calmme.commons.Routes
+import com.example.calmme.pages.consultation.PshycologistItem
 
 // Daftar mood dan ikon masing-masing (sesuaikan dengan resource kamu)
 val moods = listOf(
@@ -16,13 +18,62 @@ val moods = listOf(
     "worried" to R.drawable.md_worried,
 )
 
-data class CategoryData(val name: String, val icon: Int, val color1: Color, val color2: Color)
+data class CategoryData(
+    val name: String,
+    val icon: Int,
+    val color1: Color,
+    val color2: Color,
+    val route: String
+)
 
 val categoryList = listOf(
-    CategoryData("Meditate Time", R.drawable.ct_medi, Color(0xffDBE1E2),Color(0xffB8F7FD)),
-    CategoryData("Self-Assessment Test", R.drawable.ct_test,Color(0xffF7E8F8),Color(0xffCEBFE6)),
-    CategoryData("Consultation", R.drawable.foryou_1,Color(0xffDBE1E2),Color(0xffB8F7FD)),
-    CategoryData("Daily Mood Tracker", R.drawable.ct_mood,Color(0xffFDFFDC),Color(0xffFBFFA8)),
-    CategoryData("Subscribe \uD83D\uDC51", R.drawable.ct_subs,Color(0xffF7E8F8),Color(0xffCEBFE6)),
-    CategoryData("Community", R.drawable.foryou_2,Color(0xffFDFFDC),Color(0xffFBFFA8)),
+    CategoryData(
+        "Meditate Time",
+        R.drawable.ct_medi,
+        Color(0xffDBE1E2),
+        Color(0xffB8F7FD),
+        Routes.Meditate.route),
+    CategoryData(
+        "Self-Assessment Test",
+        R.drawable.ct_test,
+        Color(0xffF7E8F8),
+        Color(0xffCEBFE6),
+        Routes.Assesment.route
+    ),
+    CategoryData(
+        "Consultation",
+        R.drawable.foryou_1,
+        Color(0xffDBE1E2),
+        Color(0xffB8F7FD),
+        Routes.Consultation.route
+    ),
+    CategoryData(
+        "Daily Mood Tracker",
+        R.drawable.ct_mood,
+        Color(0xffFDFFDC),
+        Color(0xffFBFFA8),
+        Routes.DailyMood.route
+    ),
+    CategoryData(
+        "Subscribe \uD83D\uDC51",
+        R.drawable.ct_subs,
+        Color(0xffF7E8F8),
+        Color(0xffCEBFE6),
+        Routes.Subscribe.route
+    ),
+    CategoryData(
+        "Community",
+        R.drawable.foryou_2,
+        Color(0xffFDFFDC),
+        Color(0xffFBFFA8),
+        Routes.Community.route
+    ),
+)
+
+val psychologists = listOf(
+    PshycologistItem("Alvis, S.Psi.", R.drawable.ps_men, "General Clinical Psychologist", "9:00 AM - 4:00 PM"),
+    PshycologistItem("Ainun Fahma, M.Psi.", R.drawable.ps_women, "General Clinical Psychologist", "10:00 AM - 2:00 PM"),
+    PshycologistItem("Arga Santoso, M.Psi.", R.drawable.ps_men, "General Clinical Psychologist", "1:00 PM - 8:00 PM"),
+    PshycologistItem("Alice Dian, M.Psi.", R.drawable.ps_women, "General Clinical Psychologist", "9:00 AM - 4:00 PM"),
+    PshycologistItem("Ilham, M.Psi.", R.drawable.ps_men, "General Clinical Psychologist", "5:00 PM - 7:00 PM")
 )

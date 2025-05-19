@@ -53,6 +53,7 @@ import androidx.navigation.NavController
 import com.example.calmme.R
 import com.example.calmme.commons.LocalNavController
 import com.example.calmme.commons.Routes
+import com.example.calmme.commons.Routes.Assesment.route
 import com.example.calmme.data.CategoryData
 import com.example.calmme.data.categoryList
 import com.example.calmme.data.moods
@@ -95,15 +96,15 @@ fun HomeScreen(modifier: Modifier = Modifier, authViewModel: AuthViewModel) {
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item { HeaderSection(user?.displayName ?: "Guest", authViewModel = authViewModel) }
-            item { ForYouSection() }
+            item { HomeHeader(user?.displayName ?: "Guest", authViewModel = authViewModel) }
+            item { HomeForYou() }
         }
     }
 }
 
 
 @Composable
-fun HeaderSection(username: String, modifier: Modifier = Modifier, authViewModel: AuthViewModel) {
+fun HomeHeader(username: String, modifier: Modifier = Modifier, authViewModel: AuthViewModel) {
     val navController = LocalNavController.current
     Column {
         Spacer(
@@ -146,13 +147,13 @@ fun HeaderSection(username: String, modifier: Modifier = Modifier, authViewModel
                 )
             }
         }
-        MoodSection()
+        HomeMood()
     }
 }
 
 
 @Composable
-fun MoodSection(modifier: Modifier = Modifier) {
+fun HomeMood(modifier: Modifier = Modifier) {
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -191,7 +192,8 @@ fun MoodItem(modifier: Modifier = Modifier,name: String, icon: Int) {
 }
 
 @Composable
-fun ForYouSection(modifier: Modifier = Modifier) {
+fun HomeForYou(modifier: Modifier = Modifier) {
+    val navController = LocalNavController.current
     Column(
         modifier
             .fillMaxSize()
@@ -225,7 +227,9 @@ fun ForYouSection(modifier: Modifier = Modifier) {
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { }
+                .clickable {
+                    navController.navigate(Routes.Subscribe.route)
+                }
         ) {
             Box(
                 modifier
@@ -285,14 +289,14 @@ fun ForYouSection(modifier: Modifier = Modifier) {
             }
         }
         Spacer(modifier.height(16.dp))
-        CategorySection()
+        HomeCategory()
     }
 }
 
 
 
 @Composable
-fun CategorySection(modifier: Modifier = Modifier) {
+fun HomeCategory(modifier: Modifier = Modifier) {
     Column(
         modifier
             .fillMaxWidth()
@@ -333,9 +337,9 @@ fun CategorySection(modifier: Modifier = Modifier) {
             itemsIndexed(categoryList) { index, category ->
                 // Cek apakah index genap atau ganjil untuk menentukan ukuran
                 if (index % 2 == 0 ) {
-                    CategoryItem(category = category, isLarge = true)
+                    HomeCategoryItem(category = category, isLarge = true)
                 } else {
-                    CategoryItem(category = category, isLarge = false)
+                    HomeCategoryItem(category = category, isLarge = false)
                 }
             }
         }
@@ -344,12 +348,15 @@ fun CategorySection(modifier: Modifier = Modifier) {
 
 
 @Composable
-fun CategoryItem(modifier: Modifier = Modifier, category: CategoryData, isLarge: Boolean) {
+fun HomeCategoryItem(modifier: Modifier = Modifier, category: CategoryData, isLarge: Boolean) {
+    val navController = LocalNavController.current
     Card(
         modifier
             .fillMaxWidth()
             .height(if (isLarge) 180.dp else 150.dp) // Ukuran berbeda
-            .clickable {  },
+            .clickable {
+                navController.navigate(category.route)
+            },
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
