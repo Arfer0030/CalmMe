@@ -20,15 +20,18 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.calmme.R
+import com.example.calmme.pages.assesment.AssesmentScreen
 import com.example.calmme.pages.authentication.AuthScreen
 import com.example.calmme.pages.authentication.AuthViewModel
 import com.example.calmme.pages.authentication.LoginScreen
 import com.example.calmme.pages.authentication.RegisterScreen
 import com.example.calmme.pages.community.CommunityScreen
+import com.example.calmme.pages.consultation.AppointmentScreen
 import com.example.calmme.pages.consultation.ConsultationScreen
 import com.example.calmme.pages.history.HistoryScreen
 import com.example.calmme.pages.home.HomeScreen
 import com.example.calmme.pages.profile.ProfileScreen
+import com.example.calmme.pages.subscribe.SubscribeScreen
 
 data class NavigationItem(
     val route: String,
@@ -104,6 +107,9 @@ fun Application(authViewModel: AuthViewModel) {
                 composable(Routes.History.route) { HistoryScreen() }
                 composable(Routes.Community.route) { CommunityScreen() }
                 composable(Routes.Profile.route) { ProfileScreen() }
+                composable(Routes.Assesment.route) { AssesmentScreen() }
+                composable(Routes.Subscribe.route) { SubscribeScreen() }
+                composable(Routes.Appointment.route) { AppointmentScreen() }
             }
         }
     }
