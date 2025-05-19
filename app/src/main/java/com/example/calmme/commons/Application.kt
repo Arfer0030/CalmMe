@@ -26,6 +26,7 @@ import com.example.calmme.pages.authentication.AuthViewModel
 import com.example.calmme.pages.authentication.LoginScreen
 import com.example.calmme.pages.authentication.RegisterScreen
 import com.example.calmme.pages.community.CommunityScreen
+import com.example.calmme.pages.consultation.AppointmentScreen
 import com.example.calmme.pages.consultation.ConsultationScreen
 import com.example.calmme.pages.history.HistoryScreen
 import com.example.calmme.pages.home.HomeScreen
@@ -108,6 +109,7 @@ fun Application(authViewModel: AuthViewModel) {
                 composable(Routes.Profile.route) { ProfileScreen() }
                 composable(Routes.Assesment.route) { AssesmentScreen() }
                 composable(Routes.Subscribe.route) { SubscribeScreen() }
+                composable(Routes.Appointment.route) { AppointmentScreen() }
             }
         }
     }
