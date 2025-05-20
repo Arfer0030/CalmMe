@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,22 +17,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,12 +37,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import com.example.calmme.R
 import com.example.calmme.commons.LocalNavController
 import com.example.calmme.commons.Routes
@@ -95,15 +86,15 @@ fun HomeScreen(modifier: Modifier = Modifier, authViewModel: AuthViewModel) {
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item { HeaderSection(user?.displayName ?: "Guest", authViewModel = authViewModel) }
-            item { ForYouSection() }
+            item { HomeHeader(user?.displayName ?: "Guest", authViewModel = authViewModel) }
+            item { HomeForYou() }
         }
     }
 }
 
 
 @Composable
-fun HeaderSection(username: String, modifier: Modifier = Modifier, authViewModel: AuthViewModel) {
+fun HomeHeader(username: String, modifier: Modifier = Modifier, authViewModel: AuthViewModel) {
     val navController = LocalNavController.current
     Column {
         Spacer(
@@ -146,13 +137,13 @@ fun HeaderSection(username: String, modifier: Modifier = Modifier, authViewModel
                 )
             }
         }
-        MoodSection()
+        HomeMood()
     }
 }
 
 
 @Composable
-fun MoodSection(modifier: Modifier = Modifier) {
+fun HomeMood(modifier: Modifier = Modifier) {
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -191,7 +182,8 @@ fun MoodItem(modifier: Modifier = Modifier,name: String, icon: Int) {
 }
 
 @Composable
-fun ForYouSection(modifier: Modifier = Modifier) {
+fun HomeForYou(modifier: Modifier = Modifier) {
+    val navController = LocalNavController.current
     Column(
         modifier
             .fillMaxSize()
@@ -225,7 +217,9 @@ fun ForYouSection(modifier: Modifier = Modifier) {
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { }
+                .clickable {
+                    navController.navigate(Routes.Subscribe.route)
+                }
         ) {
             Box(
                 modifier
@@ -285,14 +279,14 @@ fun ForYouSection(modifier: Modifier = Modifier) {
             }
         }
         Spacer(modifier.height(16.dp))
-        CategorySection()
+        HomeCategory()
     }
 }
 
 
 
 @Composable
-fun CategorySection(modifier: Modifier = Modifier) {
+fun HomeCategory(modifier: Modifier = Modifier) {
     Column(
         modifier
             .fillMaxWidth()
@@ -333,9 +327,9 @@ fun CategorySection(modifier: Modifier = Modifier) {
             itemsIndexed(categoryList) { index, category ->
                 // Cek apakah index genap atau ganjil untuk menentukan ukuran
                 if (index % 2 == 0 ) {
-                    CategoryItem(category = category, isLarge = true)
+                    HomeCategoryItem(category = category, isLarge = true)
                 } else {
-                    CategoryItem(category = category, isLarge = false)
+                    HomeCategoryItem(category = category, isLarge = false)
                 }
             }
         }
@@ -344,12 +338,15 @@ fun CategorySection(modifier: Modifier = Modifier) {
 
 
 @Composable
-fun CategoryItem(modifier: Modifier = Modifier, category: CategoryData, isLarge: Boolean) {
+fun HomeCategoryItem(modifier: Modifier = Modifier, category: CategoryData, isLarge: Boolean) {
+    val navController = LocalNavController.current
     Card(
         modifier
             .fillMaxWidth()
             .height(if (isLarge) 180.dp else 150.dp) // Ukuran berbeda
-            .clickable {  },
+            .clickable {
+                navController.navigate(category.route)
+            },
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
