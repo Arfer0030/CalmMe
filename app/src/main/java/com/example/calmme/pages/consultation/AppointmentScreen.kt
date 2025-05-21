@@ -1,5 +1,6 @@
 package com.example.calmme.pages.consultation
 
+import android.content.ClipData.Item
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -51,21 +53,27 @@ fun AppointmentScreen(viewModel: ConsultationViewModel) {
     var showDatePicker by remember { mutableStateOf(false) }
     var selectedDate by remember { mutableStateOf("") }
 
-    Column(
+    LazyColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxSize()
             .background(color = Color.LightGray)
     ) {
-        AppointmentTopBar(navController)
-        PsychologistImage(viewModel)
-        AppointmentInfoCard(
-            onDatePickerClick = { showDatePicker = true },
-            onSubmitClick = { /* Handle Submission */ },
-            selectedMethod = selectedMethod,
-            onMethodSelect = { selectedMethod = it },
-            viewModel = viewModel
-        )
+        item {
+            AppointmentTopBar(navController)
+        }
+        item {
+            PsychologistImage(viewModel)
+        }
+        item {
+            AppointmentInfoCard(
+                onDatePickerClick = { showDatePicker = true },
+                onSubmitClick = { /* Handle Submission */ },
+                selectedMethod = selectedMethod,
+                onMethodSelect = { selectedMethod = it },
+                viewModel = viewModel
+            )
+        }
     }
 }
 
@@ -224,9 +232,9 @@ fun ConsultationMethodSelector(selectedMethod: String, onMethodSelect: (String) 
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        ConsultationMethodButton(R.drawable.ic_key, "Chat", selectedMethod, onMethodSelect)
-        ConsultationMethodButton(R.drawable.ic_mail, "Call", selectedMethod, onMethodSelect)
-        ConsultationMethodButton(R.drawable.ic_eye, "Video", selectedMethod, onMethodSelect)
+        ConsultationMethodButton(R.drawable.ic_chat, "Chat", selectedMethod, onMethodSelect)
+        ConsultationMethodButton(R.drawable.ic_phone, "Call", selectedMethod, onMethodSelect)
+        ConsultationMethodButton(R.drawable.ic_cam, "Video", selectedMethod, onMethodSelect)
     }
 }
 
@@ -267,7 +275,7 @@ fun SubmitButton(onClick: () -> Unit) {
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.ic_history),
+                    painter = painterResource(id = R.drawable.ic_check),
                     contentDescription = "Submit",
                     tint = Color.Black,
                     modifier = Modifier.size(32.dp))
