@@ -26,6 +26,7 @@ import com.example.calmme.pages.authentication.AuthViewModel
 import com.example.calmme.pages.community.CommunityScreen
 import com.example.calmme.pages.consultation.AppointmentScreen
 import com.example.calmme.pages.consultation.ConsultationScreen
+import com.example.calmme.pages.consultation.ConsultationViewModel
 import com.example.calmme.pages.history.HistoryScreen
 import com.example.calmme.pages.home.HomeScreen
 import com.example.calmme.pages.meditate.MeditateScreen
@@ -39,7 +40,7 @@ data class NavigationItem(
 )
 
 @Composable
-fun Application(authViewModel: AuthViewModel) {
+fun Application(authViewModel: AuthViewModel, consultationViewModel: ConsultationViewModel) {
     val navController = rememberNavController()
 
     // Menyediakan NavController ke seluruh composable di dalamnya
@@ -102,13 +103,17 @@ fun Application(authViewModel: AuthViewModel) {
             ) {
                 composable(Routes.Authentication.route) { AuthScreen(authViewModel) }
                 composable(Routes.Home.route) { HomeScreen(authViewModel = authViewModel) }
-                composable(Routes.Consultation.route) { ConsultationScreen() }
+                composable(Routes.Consultation.route) {
+                    ConsultationScreen(consultationViewModel)
+                }
+                composable(Routes.Appointment.route) {
+                    AppointmentScreen(consultationViewModel)
+                }
                 composable(Routes.History.route) { HistoryScreen() }
                 composable(Routes.Community.route) { CommunityScreen() }
                 composable(Routes.Profile.route) { ProfileScreen() }
                 composable(Routes.Assesment.route) { AssesmentScreen() }
                 composable(Routes.Subscribe.route) { SubscribeScreen() }
-                composable(Routes.Appointment.route) { AppointmentScreen() }
                 composable (Routes.Meditate.route) { MeditateScreen() }
             }
         }
@@ -123,6 +128,7 @@ fun shouldShowBottomBar(): Boolean {
 
     val noBottomBarScreens = listOf(
         Routes.Authentication.route,
+        Routes.Appointment.route,
     )
 
     // Jika `currentRoute` tidak null dan tidak termasuk dalam daftar layar tanpa BottomBar

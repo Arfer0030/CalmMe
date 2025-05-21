@@ -27,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,10 +42,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.calmme.R
-import com.example.calmme.data.psychologists
+import com.example.calmme.commons.LocalNavController
+import com.example.calmme.commons.Routes
+import com.example.calmme.data.psychologistss
+import kotlinx.serialization.Serializable
+
 
 @Composable
-fun ConsultationScreen() {
+fun ConsultationScreen(consultationViewModel: ConsultationViewModel) {
+    val psychologists by consultationViewModel.psychologists.collectAsState()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -59,7 +66,7 @@ fun ConsultationScreen() {
         Spacer(modifier = Modifier.height(12.dp))
         SearchBar()
         Spacer(modifier = Modifier.height(24.dp))
-        TopPsychologistsSection()
+        TopPsychologistsSection(psychologists, consultationViewModel)
     }
 }
 
@@ -124,7 +131,10 @@ fun SearchBar(modifier: Modifier = Modifier) {
 
 
 @Composable
-fun TopPsychologistsSection() {
+fun TopPsychologistsSection(
+    psychologists: List<PshycologistItem>,
+    consultationViewModel: ConsultationViewModel
+) {
     Column {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -145,7 +155,7 @@ fun TopPsychologistsSection() {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(psychologists) { psychologist ->
-                PsychologistCard(psychologist)
+                PsychologistCard(psychologist, consultationViewModel)
             }
         }
     }
@@ -153,10 +163,10 @@ fun TopPsychologistsSection() {
 
 
 @Composable
-fun PsychologistCard(psychologist: PshycologistItem) {
+fun PsychologistCard(psychologist: PshycologistItem, consultationViewModel: ConsultationViewModel) {
+    val navController = LocalNavController.current
     Card(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
@@ -197,26 +207,28 @@ fun PsychologistCard(psychologist: PshycologistItem) {
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(psychologist.schedule, fontSize = 14.sp)
                     }
-                    Row (
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.End
-                    ){
+                    ) {
                         Button(
                             modifier = Modifier
                                 .height(30.dp)
-                                .width(100.dp), // Kamu bisa atur lebarnya di sini
-                            onClick = { /* Handle Appointment */ },
+                                .width(100.dp),
+                            onClick = {
+                                consultationViewModel.setSelectedPsychologist(psychologist)
+                                navController.navigate(Routes.Appointment.route)
+                            },
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF933C9F)),
-                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp) // Atur padding agar lebih kecil
+                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
                         ) {
                             Text(
                                 "Appointment",
                                 color = Color.White,
                                 fontSize = 10.sp,
-                                maxLines = 1 // Batasin jadi 1 baris
+                                maxLines = 1
                             )
                         }
-
                     }
                 }
             }
@@ -225,9 +237,11 @@ fun PsychologistCard(psychologist: PshycologistItem) {
 }
 
 
+@Serializable
 data class PshycologistItem(
     val name: String,
     val image: Int,
     val description: String,
+    val about: String,
     val schedule: String
 )
