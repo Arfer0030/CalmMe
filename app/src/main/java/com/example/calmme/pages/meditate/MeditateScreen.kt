@@ -10,8 +10,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,12 +20,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.font.FontWeight
 import com.example.calmme.R
 
 @Composable
 fun MeditateScreen() {
+    val context = LocalContext.current
+    var activeTrackId by remember { mutableStateOf<Int?>(null) }
+    var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            mediaPlayer?.release()
+            mediaPlayer = null
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -63,28 +72,11 @@ fun MeditateScreen() {
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
+
         val items = listOf(
-            MeditateItems(
-                name = "Drift Into Dreams",
-                image = R.drawable.dreams,
-                description = "A soothing soundtrack to drift into peaceful sleep.",
-                schedule = "1:23",
-                audioResId = R.raw.calm_dream
-            ),
-            MeditateItems(
-                name = "Moonlight Calm",
-                image = R.drawable.moonlight,
-                description = "Gentle melodies under the moonlight.",
-                schedule = "0:58",
-                audioResId = R.raw.moonlight_calm
-            ),
-            MeditateItems(
-                name = "Whispers of the Forest",
-                image = R.drawable.forest,
-                description = "Nature sounds from a serene forest.",
-                schedule = "1:07",
-                audioResId = R.raw.forest_whispers
-            )
+            MeditateItems("Drift Into Dreams", R.drawable.dreams, "A soothing soundtrack to drift into peaceful sleep.", "1:23", R.raw.calm_dream),
+            MeditateItems("Moonlight Calm", R.drawable.moonlight, "Gentle melodies under the moonlight.", "0:58", R.raw.moonlight_calm),
+            MeditateItems("Whispers of the Forest", R.drawable.forest, "Nature sounds from a serene forest.", "1:07", R.raw.forest_whispers)
         )
 
         LazyColumn(
@@ -97,7 +89,34 @@ fun MeditateScreen() {
                     imageRes = item.image,
                     description = item.description,
                     duration = item.schedule,
-                    audioResId = item.audioResId
+                    audioResId = item.audioResId,
+                    isActive = activeTrackId == item.audioResId,
+                    onPlayPause = {
+                        if (activeTrackId == item.audioResId) {
+                            // Pause current track
+                            mediaPlayer?.pause()
+                            mediaPlayer?.release()
+                            mediaPlayer = null
+                            activeTrackId = null
+                        } else {
+                            // Stop current playing track
+                            mediaPlayer?.stop()
+                            mediaPlayer?.release()
+
+                            // Start new track
+                            val newPlayer = MediaPlayer.create(context, item.audioResId)
+                            newPlayer.start()
+                            mediaPlayer = newPlayer
+                            activeTrackId = item.audioResId
+
+                            // Auto reset when done
+                            newPlayer.setOnCompletionListener {
+                                activeTrackId = null
+                                mediaPlayer?.release()
+                                mediaPlayer = null
+                            }
+                        }
+                    }
                 )
             }
         }
@@ -110,12 +129,10 @@ fun SoundCard(
     imageRes: Int,
     description: String,
     duration: String,
-    audioResId: Int
+    audioResId: Int,
+    isActive: Boolean,
+    onPlayPause: () -> Unit
 ) {
-    val context = LocalContext.current
-    var isPlaying by remember { mutableStateOf(false) }
-    var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -151,32 +168,18 @@ fun SoundCard(
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = duration,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.align(Alignment.CenterVertically)
+                style = MaterialTheme.typography.bodySmall
             )
             Icon(
-                imageVector = Icons.Default.PlayArrow,
-                contentDescription = "Play",
+                painter = if (isActive)
+                    painterResource(id = R.drawable.pause_icon) // pakai icon sendiri
+                else
+                    painterResource(id = R.drawable.play_icon), // pakai icon sendiri
+                contentDescription = if (isActive) "Pause" else "Play",
                 modifier = Modifier
                     .size(24.dp)
                     .padding(start = 8.dp)
-                    .clickable {
-                        if (!isPlaying) {
-                            mediaPlayer = MediaPlayer.create(context, audioResId)
-                            mediaPlayer?.start()
-                            isPlaying = true
-                            mediaPlayer?.setOnCompletionListener {
-                                isPlaying = false
-                                it.release()
-                                mediaPlayer = null
-                            }
-                        } else {
-                            mediaPlayer?.pause()
-                            mediaPlayer?.release()
-                            mediaPlayer = null
-                            isPlaying = false
-                        }
-                    }
+                    .clickable { onPlayPause() }
             )
         }
     }
