@@ -1,6 +1,5 @@
 package com.example.calmme.pages.meditate
 
-import android.media.MediaPlayer
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -11,34 +10,20 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.text.font.FontWeight
+import androidx.navigation.NavController
 import com.example.calmme.R
-import com.example.calmme.commons.LocalNavController
 
 @Composable
-fun MeditateScreen() {
-    val context = LocalContext.current
-    var activeTrackId by remember { mutableStateOf<Int?>(null) }
-    var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
-    val navController = LocalNavController.current
-
-    DisposableEffect(Unit) {
-        onDispose {
-            mediaPlayer?.release()
-            mediaPlayer = null
-        }
-    }
-
+fun MeditateScreen(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -49,25 +34,23 @@ fun MeditateScreen() {
             )
             .padding(16.dp)
     ) {
-        Row {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp, top = 4.dp),
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_back),
                 contentDescription = "Back",
                 modifier = Modifier
-                    .size(24.dp)
                     .clickable {
                         navController.popBackStack()
                     }
             )
-            Spacer(modifier = Modifier.width(86.dp))
-            Text(
-                text = "Meditate Time",
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
+            Spacer(modifier = Modifier.width(94.dp))
+            Text("Meditate Time", style = MaterialTheme.typography.headlineSmall)
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
         Image(
             painter = painterResource(id = R.drawable.meditate_header),
             contentDescription = "Meditate Banner",
@@ -87,11 +70,10 @@ fun MeditateScreen() {
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
-
         val items = listOf(
-            MeditateItems("Drift Into Dreams", R.drawable.dreams, "A soothing soundtrack to drift into peaceful sleep.", "1:23", R.raw.calm_dream),
-            MeditateItems("Moonlight Calm", R.drawable.moonlight, "Gentle melodies under the moonlight.", "0:58", R.raw.moonlight_calm),
-            MeditateItems("Whispers of the Forest", R.drawable.forest, "Nature sounds from a serene forest.", "1:07", R.raw.forest_whispers)
+            MeditateItems("Drift Into Dreams", R.drawable.dreams, "A soothing soundtrack to drift into peaceful sleep.", "02:09", R.raw.calm_dream),
+            MeditateItems("Moonlight Calm", R.drawable.moonlight, "Gentle melodies under the moonlight.", "02:06", R.raw.moonlight_calm),
+            MeditateItems("Whispers of the Forest", R.drawable.forest, "Nature sounds from a serene forest.", "02:12", R.raw.forest_whispers)
         )
 
         LazyColumn(
@@ -104,33 +86,8 @@ fun MeditateScreen() {
                     imageRes = item.image,
                     description = item.description,
                     duration = item.schedule,
-                    audioResId = item.audioResId,
-                    isActive = activeTrackId == item.audioResId,
-                    onPlayPause = {
-                        if (activeTrackId == item.audioResId) {
-                            // Pause current track
-                            mediaPlayer?.pause()
-                            mediaPlayer?.release()
-                            mediaPlayer = null
-                            activeTrackId = null
-                        } else {
-                            // Stop current playing track
-                            mediaPlayer?.stop()
-                            mediaPlayer?.release()
-
-                            // Start new track
-                            val newPlayer = MediaPlayer.create(context, item.audioResId)
-                            newPlayer.start()
-                            mediaPlayer = newPlayer
-                            activeTrackId = item.audioResId
-
-                            // Auto reset when done
-                            newPlayer.setOnCompletionListener {
-                                activeTrackId = null
-                                mediaPlayer?.release()
-                                mediaPlayer = null
-                            }
-                        }
+                    onClick = {
+                        navController.navigate("music/${item.audioResId}")
                     }
                 )
             }
@@ -144,14 +101,13 @@ fun SoundCard(
     imageRes: Int,
     description: String,
     duration: String,
-    audioResId: Int,
-    isActive: Boolean,
-    onPlayPause: () -> Unit
+    onClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp),
+            .padding(vertical = 6.dp)
+            .clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = Color(0xFFF2E7FB)),
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -171,8 +127,7 @@ fun SoundCard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold
+                    style = MaterialTheme.typography.titleLarge,
                 )
                 Text(
                     text = description,
@@ -184,17 +139,6 @@ fun SoundCard(
             Text(
                 text = duration,
                 style = MaterialTheme.typography.bodySmall
-            )
-            Icon(
-                painter = if (isActive)
-                    painterResource(id = R.drawable.pause_icon) // pakai icon sendiri
-                else
-                    painterResource(id = R.drawable.play_icon), // pakai icon sendiri
-                contentDescription = if (isActive) "Pause" else "Play",
-                modifier = Modifier
-                    .size(24.dp)
-                    .padding(start = 8.dp)
-                    .clickable { onPlayPause() }
             )
         }
     }

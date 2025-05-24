@@ -1,5 +1,6 @@
 package com.example.calmme.pages.assesment
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -22,6 +24,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -39,6 +43,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.calmme.R
@@ -49,12 +54,20 @@ import kotlinx.serialization.Serializable
 @Composable
 fun AssesmentScreen(assesmentViewModel: AssesmentViewModel = viewModel()) {
     val questions = assesmentViewModel.questions.collectAsState().value
+    val canSubmit = assesmentViewModel.canSubmit.collectAsState().value
     val progress = assesmentViewModel.getProgress()
     val context = LocalContext.current
     var showDialog by remember { mutableStateOf(false) }
     var score by remember { mutableStateOf(0) }
     var category by remember { mutableStateOf("") }
     val navController = LocalNavController.current
+
+    // Reset jawaban ketika screen di-dispose (keluar dari assessment)
+    DisposableEffect(Unit) {
+        onDispose {
+            assesmentViewModel.resetAllAnswers()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -66,7 +79,7 @@ fun AssesmentScreen(assesmentViewModel: AssesmentViewModel = viewModel()) {
                 )
             )
     ) {
-        HeaderSection(progress)
+        HeaderSection(progress, assesmentViewModel)
         AnswerLegend()
         Column(
             modifier = Modifier
@@ -79,11 +92,11 @@ fun AssesmentScreen(assesmentViewModel: AssesmentViewModel = viewModel()) {
                 TestResultPopup(
                     score = score,
                     category = category,
-                    onDismiss = { showDialog = false },
+                    onDismiss = { /* Kosongkan untuk mencegah dismiss */ },
                 )
             }
-            LazyColumn(modifier = Modifier.padding(4.dp)) {
 
+            LazyColumn(modifier = Modifier.padding(4.dp)) {
                 itemsIndexed(questions) { index, item ->
                     QuestionItemView(
                         questionNumber = index + 1,
@@ -93,18 +106,43 @@ fun AssesmentScreen(assesmentViewModel: AssesmentViewModel = viewModel()) {
                         }
                     )
                 }
+
                 item {
                     Spacer(modifier = Modifier.height(16.dp))
+
+                    // Tampilkan pesan jika belum semua soal dijawab
+                    if (!canSubmit) {
+                        val unansweredCount = assesmentViewModel.getUnansweredQuestionsCount()
+                        Text(
+                            text = "Masih ada $unansweredCount soal yang belum dijawab",
+                            color = Color.Red,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+
                     Button(
                         onClick = {
-                            score = assesmentViewModel.getTotalScore()
-                            category = assesmentViewModel.getResultCategory(score)
-                            showDialog = true
+                            if (canSubmit) {
+                                score = assesmentViewModel.getTotalScore()
+                                category = assesmentViewModel.getResultCategory(score)
+                                showDialog = true
+                            }
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF933C9F))
+                        enabled = canSubmit,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (canSubmit) Color(0xFF933C9F) else Color.Gray,
+                            disabledContainerColor = Color.Gray
+                        )
                     ) {
-                        Text("Submit", color = Color.White)
+                        Text(
+                            text = if (canSubmit) "Submit" else "Jawab Semua Soal Terlebih Dahulu",
+                            color = Color.White
+                        )
                     }
                 }
             }
@@ -112,10 +150,8 @@ fun AssesmentScreen(assesmentViewModel: AssesmentViewModel = viewModel()) {
     }
 }
 
-
-
 @Composable
-fun HeaderSection(progress: Float) {
+fun HeaderSection(progress: Float, assesmentViewModel: AssesmentViewModel) {
     val navController = LocalNavController.current
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -124,7 +160,7 @@ fun HeaderSection(progress: Float) {
             .padding(16.dp)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp, top = 4.dp),
             horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -133,6 +169,8 @@ fun HeaderSection(progress: Float) {
                 contentDescription = "Back",
                 modifier = Modifier
                     .clickable {
+                        // Reset jawaban sebelum keluar
+                        assesmentViewModel.resetAllAnswers()
                         navController.popBackStack()
                     }
             )
@@ -250,56 +288,111 @@ fun TestResultPopup(
     onDismiss: () -> Unit,
 ) {
     val navController = LocalNavController.current
-    Dialog(onDismissRequest = onDismiss) {
+    Dialog(
+        onDismissRequest = { /* Kosongkan untuk mencegah dismiss ketika klik di luar */ },
+        properties = DialogProperties(
+            dismissOnBackPress = false, // Mencegah dismiss dengan tombol back
+            dismissOnClickOutside = false // Mencegah dismiss ketika klik di luar
+        )
+    ) {
         Box(
             modifier = Modifier
+                .size(280.dp, 300.dp) // Ukuran popup
                 .clip(RoundedCornerShape(16.dp))
-                .background(Color.White)
-                .padding(24.dp)
         ) {
+            // Background Image
+            Image(
+                painter = painterResource(id = R.drawable.ass_result), // Ganti dengan gambar background Anda
+                contentDescription = "Background",
+                modifier = Modifier.fillMaxSize(),
+            )
+
+            // Overlay semi-transparan untuk meningkatkan readability text
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Color.Black.copy(alpha = 0.1f), // Overlay gelap transparan
+                        RoundedCornerShape(16.dp)
+                    )
+            )
+
+            // Content di atas background
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp)
             ) {
-                Text("Hasil Tes Kamu", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Score Box
+                Box(
+                    modifier = Modifier
+                        .background(
+                            Color.White.copy(alpha = 0.9f),
+                            RoundedCornerShape(12.dp)
+                        )
+                        .padding(horizontal = 24.dp, vertical = 8.dp)
+                ) {
+                    Text(
+                        text = "Skor: $score",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = Color(0xFF933C9F)
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // Category Box
                 Box(
                     modifier = Modifier
-                        .background(Color(0xFFE0F7FA), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 24.dp, vertical = 12.dp)
+                        .background(
+                            Color.White.copy(alpha = 0.9f),
+                            RoundedCornerShape(12.dp)
+                        )
+                        .padding(horizontal = 24.dp, vertical = 8.dp)
                 ) {
-                    Text("Skor: $score", fontSize = 18.sp, fontWeight = FontWeight.Medium)
+                    Text(
+                        text = category,
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = Color(0xFF933C9F),
+                        textAlign = TextAlign.Center
+                    )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(30.dp))
 
-                Text(
-                    text = "Kategori: $category",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF933C9F),
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
+                // Button
                 Button(
                     onClick = {
                         navController.navigate(Routes.Home.route) {
-                            popUpTo(Routes.Assesment) { inclusive = true }
+                            popUpTo(Routes.Home.route) {
+                                inclusive = false
+                            }
+                            launchSingleTop = true
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF933C9F)),
-                    shape = RoundedCornerShape(8.dp)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF933C9F)
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .width(120.dp)
+                        .height(36.dp)
                 ) {
-                    Text(text = "Kembali ke Home", color = Color.White)
+                    Text(
+                        text = "To Home",
+                        color = Color.White,
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
                 }
             }
         }
     }
 }
-
 
 
 @Serializable
