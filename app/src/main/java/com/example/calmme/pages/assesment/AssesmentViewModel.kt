@@ -9,10 +9,34 @@ class AssesmentViewModel : ViewModel() {
     private val _questions = MutableStateFlow(Questions)
     val questions: StateFlow<List<QuestionItem>> = _questions
 
+    // Tambahkan StateFlow untuk status submit
+    private val _canSubmit = MutableStateFlow(false)
+    val canSubmit: StateFlow<Boolean> = _canSubmit
+
     fun updateAnswer(index: Int, answer: Int) {
         val updatedList = _questions.value.toMutableList()
         updatedList[index] = updatedList[index].copy(answer = answer)
         _questions.value = updatedList
+
+        // Update status submit setiap kali ada jawaban yang berubah
+        _canSubmit.value = areAllQuestionsAnswered()
+    }
+
+    // Fungsi untuk mengecek apakah semua soal sudah dijawab
+    fun areAllQuestionsAnswered(): Boolean {
+        return _questions.value.all { it.answer != -1 }
+    }
+
+    // Fungsi untuk mendapatkan jumlah soal yang belum dijawab
+    fun getUnansweredQuestionsCount(): Int {
+        return _questions.value.count { it.answer == -1 }
+    }
+
+    // Fungsi untuk reset semua jawaban
+    fun resetAllAnswers() {
+        val resetList = _questions.value.map { it.copy(answer = -1) }
+        _questions.value = resetList
+        _canSubmit.value = false
     }
 
     fun getProgress(): Float {
@@ -31,4 +55,3 @@ class AssesmentViewModel : ViewModel() {
         else -> "Tidak diketahui"
     }
 }
-

@@ -35,11 +35,22 @@ fun MeditateScreen(navController: NavController) {
             )
             .padding(16.dp)
     ) {
-        Text(
-            text = "Meditate Time",
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp, top = 4.dp),
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_back),
+                contentDescription = "Back",
+                modifier = Modifier
+                    .clickable {
+                        navController.popBackStack()
+                    }
+            )
+            Spacer(modifier = Modifier.width(94.dp))
+            Text("Meditate Time", style = MaterialTheme.typography.headlineSmall)
+        }
 
         Image(
             painter = painterResource(id = R.drawable.meditate_header),
@@ -56,7 +67,7 @@ fun MeditateScreen(navController: NavController) {
 
         Text(
             text = "Your Calm Picks",
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+            style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
@@ -117,8 +128,7 @@ fun SoundCard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold
+                    style = MaterialTheme.typography.titleLarge,
                 )
                 Text(
                     text = description,

@@ -23,6 +23,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.navigation.NavController
 import kotlinx.coroutines.delay
 import com.example.calmme.R
+import com.example.calmme.commons.Routes
 
 data class MusicData(
     val title: String,
@@ -56,48 +57,103 @@ fun MusicScreen(
     var duration by remember { mutableStateOf(currentMusic.durationMs) }
     var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
 
-    DisposableEffect(currentMusic.audioRes) {
-        mediaPlayer?.release()
-        val player = MediaPlayer.create(context, currentMusic.audioRes)
-        player.setOnPreparedListener {
-            duration = player.duration
-            if (isPlaying) player.start()
-        }
-        player.setOnCompletionListener {
+    // Fungsi untuk membersihkan MediaPlayer dengan aman
+    fun cleanupMediaPlayer() {
+        try {
+            mediaPlayer?.let { player ->
+                if (player.isPlaying) {
+                    player.stop()
+                }
+                player.reset()
+                player.release()
+            }
+        } catch (e: Exception) {
+            // Handle exception jika MediaPlayer sudah di-release
+        } finally {
+            mediaPlayer = null
             isPlaying = false
-            currentPosition = duration
         }
-        mediaPlayer = player
-        isPlaying = true
-        currentPosition = 0
+    }
+
+    // Fungsi untuk navigasi back yang aman
+    fun handleBackNavigation() {
+        cleanupMediaPlayer()
+        try {
+            navController.popBackStack()
+        } catch (e: Exception) {
+            // Fallback jika popBackStack gagal
+            navController.navigate(Routes.Home.route) {
+                popUpTo(Routes.Home.route) {
+                    inclusive = false
+                }
+                launchSingleTop = true
+            }
+        }
+    }
+
+    DisposableEffect(currentMusic.audioRes) {
+        cleanupMediaPlayer()
+
+        try {
+            val player = MediaPlayer.create(context, currentMusic.audioRes)
+            player?.let {
+                it.setOnPreparedListener { preparedPlayer ->
+                    duration = preparedPlayer.duration
+                    if (isPlaying) preparedPlayer.start()
+                }
+                it.setOnCompletionListener {
+                    isPlaying = false
+                    currentPosition = duration
+                }
+                it.setOnErrorListener { _, what, extra ->
+                    // Handle MediaPlayer error
+                    cleanupMediaPlayer()
+                    false
+                }
+                mediaPlayer = it
+                isPlaying = true
+                currentPosition = 0
+            }
+        } catch (e: Exception) {
+            // Handle error saat membuat MediaPlayer
+            cleanupMediaPlayer()
+        }
 
         onDispose {
-            player.stop()
-            player.release()
-            mediaPlayer = null
+            cleanupMediaPlayer()
         }
     }
 
     LaunchedEffect(isPlaying) {
-        mediaPlayer?.let { player ->
-            if (isPlaying && !player.isPlaying) player.start()
-            else if (!isPlaying && player.isPlaying) player.pause()
+        try {
+            mediaPlayer?.let { player ->
+                if (isPlaying && !player.isPlaying) {
+                    player.start()
+                } else if (!isPlaying && player.isPlaying) {
+                    player.pause()
+                }
+            }
+        } catch (e: Exception) {
+            // Handle exception
+            cleanupMediaPlayer()
         }
     }
 
     LaunchedEffect(isPlaying, mediaPlayer) {
         while (isPlaying && mediaPlayer != null) {
-            currentPosition = mediaPlayer?.currentPosition ?: 0
-            delay(300L)
-            if (currentPosition >= duration) break
+            try {
+                currentPosition = mediaPlayer?.currentPosition ?: 0
+                delay(300L)
+                if (currentPosition >= duration) break
+            } catch (e: Exception) {
+                break
+            }
         }
     }
 
+    // BackHandler untuk menangani tombol back sistem
     BackHandler {
-        mediaPlayer?.stop()
-        mediaPlayer?.release()
-        mediaPlayer = null
-        navController.popBackStack()
+        handleBackNavigation()
     }
 
     Box(
@@ -116,7 +172,7 @@ fun MusicScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp, top = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
@@ -125,16 +181,13 @@ fun MusicScreen(
                     modifier = Modifier
                         .size(28.dp)
                         .clickable {
-                            mediaPlayer?.stop()
-                            mediaPlayer?.release()
-                            mediaPlayer = null
-                            navController.popBackStack()
+                            handleBackNavigation()
                         }
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
                     text = "Now Playing",
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.weight(3f),
                     textAlign = TextAlign.Center
                 )
@@ -160,16 +213,15 @@ fun MusicScreen(
                         Color(0xFFF4EAF9),
                         CircleShape
                     )
-                    .padding(8.dp)
+                    .padding(8.dp),
+                contentScale = ContentScale.Crop
             )
 
             Spacer(modifier = Modifier.height(18.dp))
 
             Text(
                 text = currentMusic.title,
-                style = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.Bold
-                ),
+                style = MaterialTheme.typography.headlineLarge,
                 modifier = Modifier.padding(vertical = 4.dp),
                 textAlign = TextAlign.Center
             )
@@ -179,9 +231,13 @@ fun MusicScreen(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Slider(
                     value = currentPosition.toFloat(),
-                    onValueChange = {
-                        currentPosition = it.toInt()
-                        mediaPlayer?.seekTo(currentPosition)
+                    onValueChange = { newValue ->
+                        try {
+                            currentPosition = newValue.toInt()
+                            mediaPlayer?.seekTo(currentPosition)
+                        } catch (e: Exception) {
+                            // Handle seek error
+                        }
                     },
                     valueRange = 0f..duration.toFloat(),
                     modifier = Modifier
@@ -280,6 +336,7 @@ fun MusicScreen(
         }
     }
 }
+
 
 fun formatMillis(ms: Int): String {
     val totalSec = ms / 1000
