@@ -80,10 +80,14 @@ fun LoginScreen(
             route = Routes.Home.route,
             authViewModel = authViewModel
         ) {
-            authViewModel.login(username, password)
+            if (username.isBlank() || password.isBlank()) {
+                Toast.makeText(context, "Username and Password can't be empty", Toast.LENGTH_SHORT).show()
+            } else {
+                authViewModel.login(username, password)
+            }
         }
 
-        Spacer(modifier.height(180.dp))
+        Spacer(modifier.height(8.dp))
         AuthBottomText("Don't have an account?", "Sign Up", onTabSwitch = onSwitchToRegister)
     }
 }

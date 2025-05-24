@@ -84,10 +84,14 @@ fun RegisterScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         AuthButton(text = "Sign Up", route = Routes.Home.route, authViewModel = authViewModel) {
-            authViewModel.signup(email, password)
+            if (email.isBlank() || password.isBlank()) {
+                Toast.makeText(context, "Email and Password can't be empty", Toast.LENGTH_SHORT).show()
+            } else {
+                authViewModel.signup(email, password)
+            }
         }
 
-        Spacer(modifier = Modifier.height(120.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         AuthBottomText("Already have an account?", "Log In", onTabSwitch = onSwitchToLogin)
     }

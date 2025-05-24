@@ -87,7 +87,7 @@ fun AppointmentTopBar(navController: NavController) {
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Icon(
-            painter = painterResource(id = R.drawable.ic_arrow),
+            painter = painterResource(id = R.drawable.ic_back),
             contentDescription = "Back",
             modifier = Modifier
                 .size(24.dp)
@@ -97,8 +97,7 @@ fun AppointmentTopBar(navController: NavController) {
         )
         Text(
             text = "Consultation",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.headlineSmall
         )
         Image(
             painter = painterResource(id = R.drawable.profile),
@@ -128,7 +127,6 @@ fun AppointmentInfoCard(
     onMethodSelect: (String) -> Unit,
     viewModel: ConsultationViewModel
 ) {
-    val psychologist by viewModel.selectedPsychologist.collectAsState()
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -160,10 +158,10 @@ fun AppointmentDetails(viewModel: ConsultationViewModel) {
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally // Align ke tengah
     ) {
-        Text("Visit Time", fontSize = 18.sp, fontWeight = FontWeight.Bold )
+        Text("Visit Time", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(8.dp))
-        Text(psychologist!!.name, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-        Text(psychologist!!.description, fontSize = 14.sp)
+        Text(psychologist!!.name, style = MaterialTheme.typography.displayLarge)
+        Text(psychologist!!.description, style = MaterialTheme.typography.bodyMedium)
     }
 
     Spacer(modifier = Modifier.height(24.dp))
@@ -173,17 +171,17 @@ fun AppointmentDetails(viewModel: ConsultationViewModel) {
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.Start // Align ke kiri (default)
     ) {
-        Text("About", fontWeight = FontWeight.Bold)
-        Text(psychologist!!.about, fontSize = 12.sp)
+        Text("About", style = MaterialTheme.typography.titleMedium)
+        Text(psychologist!!.about,  style = MaterialTheme.typography.bodyMedium)
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Text("Working Hours", fontWeight = FontWeight.Bold)
-        Text(psychologist!!.schedule, fontSize = 12.sp)
+        Text("Working Hours", style = MaterialTheme.typography.titleMedium)
+        Text(psychologist!!.schedule,  style = MaterialTheme.typography.bodyMedium)
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Text("Stats", fontWeight = FontWeight.Bold)
+        Text("Stats", style = MaterialTheme.typography.titleMedium)
     }
 }
 
@@ -221,7 +219,7 @@ fun MakeAppointmentButton(onClick: () -> Unit) {
             contentPadding = PaddingValues(),
             modifier = Modifier.fillMaxSize()
         ) {
-            Text(text = "Gradient Button", color = Color(0xff933C9F))
+            Text(text = "Make an Appointment", style = MaterialTheme.typography.titleLarge, color = Color(0xff933C9F))
         }
     }
 }
@@ -285,29 +283,10 @@ fun SubmitButton(onClick: () -> Unit) {
 }
 
 
-
 @Composable
 fun StatsItem(value: String, label: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(value, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-        Text(label, fontSize = 12.sp, color = Color.Gray)
-    }
-}
-
-@Composable
-fun ConsultationMethodButton(icon: Int, label: String, selectedMethod: String, onClick: () -> Unit) {
-    val backgroundColor = if (selectedMethod == label) Color(0xFF933C9F) else Color(0xFFF5F5F5)
-    Box(
-        modifier = Modifier
-            .size(50.dp)
-            .background(backgroundColor, RoundedCornerShape(12.dp))
-            .clickable { onClick() },
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            painter = painterResource(id = icon),
-            contentDescription = label,
-            tint = if (selectedMethod == label) Color.White else Color.Gray
-        )
+        Text(value, style = MaterialTheme.typography.titleMedium)
+        Text(label, style = MaterialTheme.typography.bodyLarge)
     }
 }
