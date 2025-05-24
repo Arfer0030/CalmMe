@@ -1,6 +1,7 @@
 package com.example.calmme.data
 
 import com.example.calmme.R
+import com.example.calmme.pages.assesment.QuestionItem
 import com.example.calmme.pages.consultation.PshycologistItem
 
 val psychologistss = listOf(
@@ -39,4 +40,14 @@ val psychologistss = listOf(
         about = "Ilham provides compassionate support and practical strategies for coping with anxiety, stress, and mental health challenges.",
         schedule = "Mon-Fri 5:00 PM - 7:00 PM"
     )
+)
+
+val Questions = listOf(
+    QuestionItem("Feeling restless, anxious, or extremely tense"),
+    QuestionItem("Unable to stop or control worry"),
+    QuestionItem("Worrying too much about things"),
+    QuestionItem("Hard to relax"),
+    QuestionItem("Very restless making it hard to sit still"),
+    QuestionItem("Being easily irritated or irritable"),
+    QuestionItem("Feeling afraid as if something terrible might happen")
 )

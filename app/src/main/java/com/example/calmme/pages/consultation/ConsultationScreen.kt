@@ -23,6 +23,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -91,15 +92,14 @@ fun ConsulHeader() {
                 Spacer(modifier = Modifier.width(90.dp))
                 Text(
                     text = "Consultation",
-                    fontSize = 20.sp,
+                    style = MaterialTheme.typography.headlineSmall
                 )
             }
         }
         Spacer(modifier = Modifier.height(30.dp))
         Text(
             text = "Let’s find your psychologist!",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.headlineMedium,
         )
     }
 }
@@ -111,7 +111,7 @@ fun SearchBar(modifier: Modifier = Modifier) {
         value = searchText,
         onValueChange = { searchText = it },
         placeholder = {
-            Text("Search psychologist", color = Color.Gray)
+            Text("Search psychologist", style = MaterialTheme.typography.bodyLarge, color = Color.Gray)
         },
         trailingIcon = {
             Icon(
@@ -140,10 +140,10 @@ fun TopPsychologistsSection(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("Top Psychologists", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Text("Top Psychologists", style = MaterialTheme.typography.headlineMedium)
             Text(
                 text = "See All",
-                fontSize = 14.sp,
+                style = MaterialTheme.typography.titleSmall,
                 color = Color(0xFF933C9F),
                 modifier = Modifier.clickable { }
             )
@@ -196,8 +196,8 @@ fun PsychologistCard(psychologist: PshycologistItem, consultationViewModel: Cons
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(psychologist.name, fontWeight = FontWeight.Bold)
-                    Text(psychologist.description, fontSize = 12.sp)
+                    Text(psychologist.name, style = MaterialTheme.typography.titleMedium)
+                    Text(psychologist.description, style = MaterialTheme.typography.bodyMedium)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_clock),
@@ -205,8 +205,10 @@ fun PsychologistCard(psychologist: PshycologistItem, consultationViewModel: Cons
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(psychologist.schedule, fontSize = 14.sp)
+                        Text(psychologist.schedule, style = MaterialTheme.typography.bodyLarge)
+
                     }
+                    Spacer(modifier = Modifier.width(8.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.End
@@ -225,7 +227,7 @@ fun PsychologistCard(psychologist: PshycologistItem, consultationViewModel: Cons
                             Text(
                                 "Appointment",
                                 color = Color.White,
-                                fontSize = 10.sp,
+                                style = MaterialTheme.typography.labelSmall,
                                 maxLines = 1
                             )
                         }

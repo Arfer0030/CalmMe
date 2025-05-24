@@ -63,7 +63,7 @@ fun AuthScreen(authViewModel: AuthViewModel) {
         ) {
             Text(
                 text = "CalmMe",
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.displayMedium,
                 color = Color.Black
             )
 
@@ -89,7 +89,7 @@ fun AuthTabSwitcher(isLogin: Boolean, onTabSelected: (Boolean) -> Unit) {
             .background(Color(0xFFB68AD6))
             .padding(horizontal = 0.dp)
             .width(350.dp)
-            .height(40.dp)
+            .height(45.dp)
     ) {
         Button(
             onClick = { onTabSelected(true) },
@@ -100,7 +100,7 @@ fun AuthTabSwitcher(isLogin: Boolean, onTabSelected: (Boolean) -> Unit) {
             border = BorderStroke(1.dp, if (isLogin) Color(0xFFB68AD6) else Color.Transparent),
             shape = RoundedCornerShape(50.dp)
         ) {
-            Text("Log In",fontWeight = FontWeight.Bold, color = if (isLogin) Color(0xFFB68AD6) else Color.White)
+            Text("Log In",style = MaterialTheme.typography.headlineLarge, color = if (isLogin) Color(0xFFB68AD6) else Color.White)
         }
 
         Button(
@@ -112,7 +112,7 @@ fun AuthTabSwitcher(isLogin: Boolean, onTabSelected: (Boolean) -> Unit) {
             border = BorderStroke(1.dp, if (!isLogin) Color(0xFFB68AD6) else Color.Transparent),
             shape = RoundedCornerShape(50.dp)
         ) {
-            Text("Register", fontWeight = FontWeight.Bold,color = if (!isLogin) Color(0xFFB68AD6) else Color.White)
+            Text("Register", style = MaterialTheme.typography.headlineLarge, color = if (!isLogin) Color(0xFFB68AD6) else Color.White)
         }
     }
 }
@@ -131,7 +131,7 @@ fun AuthButton(text: String, route: String, authViewModel: AuthViewModel, onClic
             .padding(horizontal = 8.dp),
         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB68AD6))
     ) {
-        Text(text = text, color = Color.White, fontWeight = FontWeight.Bold)
+        Text(text = text, color = Color.White, style = MaterialTheme.typography.headlineLarge)
     }
 }
 
@@ -188,15 +188,15 @@ fun AuthBottomText(text: String, textbutton:String, onTabSwitch: () -> Unit){
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = text)
+        Text(text = text, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Normal))
         TextButton(
-            modifier = Modifier.padding(start = 0.dp),
+            modifier = Modifier.height(30.dp),
             onClick = {
                 onTabSwitch()
             }
         )
         {
-            Text(text = textbutton, color = Color(0xFFB68AD6))
+            Text(text = textbutton, style = MaterialTheme.typography.titleSmall, color = Color(0xFFB68AD6))
         }
     }
 }
