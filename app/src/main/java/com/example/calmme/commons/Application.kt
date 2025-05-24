@@ -138,4 +138,3 @@ fun shouldShowBottomBar(): Boolean {
     // Jika `currentRoute` tidak null dan tidak termasuk dalam daftar layar tanpa BottomBar
     return currentRoute != null && currentRoute !in noBottomBarScreens
 }
-
