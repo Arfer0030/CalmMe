@@ -114,7 +114,7 @@ fun AssesmentScreen(assesmentViewModel: AssesmentViewModel = viewModel()) {
                     if (!canSubmit) {
                         val unansweredCount = assesmentViewModel.getUnansweredQuestionsCount()
                         Text(
-                            text = "Masih ada $unansweredCount soal yang belum dijawab",
+                            text = "There is still $unansweredCount of unanswered questions",
                             color = Color.Red,
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier
@@ -132,7 +132,7 @@ fun AssesmentScreen(assesmentViewModel: AssesmentViewModel = viewModel()) {
                                 showDialog = true
                             }
                         },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 26.dp),
                         enabled = canSubmit,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = if (canSubmit) Color(0xFF933C9F) else Color.Gray,
@@ -140,7 +140,7 @@ fun AssesmentScreen(assesmentViewModel: AssesmentViewModel = viewModel()) {
                         )
                     ) {
                         Text(
-                            text = if (canSubmit) "Submit" else "Jawab Semua Soal Terlebih Dahulu",
+                            text = if (canSubmit) "Submit" else "Answer All Questions First",
                             color = Color.White
                         )
                     }

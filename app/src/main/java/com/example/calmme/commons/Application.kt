@@ -24,6 +24,7 @@ import androidx.navigation.navArgument
 import com.example.calmme.R
 import com.example.calmme.pages.assesment.AssesmentScreen
 import com.example.calmme.pages.assesment.AssesmentViewModel
+import com.example.calmme.pages.assesment.InitAssestScreen
 import com.example.calmme.pages.authentication.AuthScreen
 import com.example.calmme.pages.authentication.AuthViewModel
 import com.example.calmme.pages.consultation.AppointmentScreen
@@ -117,6 +118,7 @@ fun Application(
                 composable(Routes.History.route) { HistoryScreen() }
                 composable(Routes.Profile.route) { ProfileScreen() }
                 composable(Routes.Assesment.route) { AssesmentScreen(assesmentViewModel) }
+                composable(Routes.InitAssesment.route) { InitAssestScreen() }
                 composable(Routes.Subscribe.route) { SubscribeScreen() }
                 composable(Routes.Meditate.route) { MeditateScreen(navController) }
                 composable(
@@ -141,6 +143,7 @@ fun shouldShowBottomBar(): Boolean {
         Routes.Authentication.route,
         Routes.Appointment.route,
         Routes.Assesment.route,
+        Routes.InitAssesment.route,
     )
     return currentRoute != null && currentRoute !in noBottomBarScreens
 }
