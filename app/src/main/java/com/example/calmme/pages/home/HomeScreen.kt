@@ -26,6 +26,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -117,8 +118,8 @@ fun HomeHeader(username: String, modifier: Modifier = Modifier, authViewModel: A
                         }
                 )
                 Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
-                    Text("Good Morning,", fontSize = 12.sp)
-                    Text("$username!", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Text("Good Morning,", style = MaterialTheme.typography.bodyLarge)
+                    Text("$username!", style = MaterialTheme.typography.titleMedium)
                 }
             }
             IconButton(
@@ -148,7 +149,7 @@ fun HomeMood(modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("how are you today?", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Text("how are you today?", style = MaterialTheme.typography.headlineMedium)
 
         LazyRow(
             modifier
@@ -177,7 +178,7 @@ fun MoodItem(modifier: Modifier = Modifier,name: String, icon: Int) {
             contentDescription = name,
             modifier = Modifier.size(80.dp)
         )
-        Text(name, fontSize = 14.sp, color = Color(0xff933C9F))
+        Text(name, style = MaterialTheme.typography.titleSmall, color = Color(0xff933C9F))
     }
 }
 
@@ -198,15 +199,16 @@ fun HomeForYou(modifier: Modifier = Modifier) {
         ) {
             Text(
                 text = "For You",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.headlineMedium,
                 color = Color.Black
             )
             Text(
                 text = "See more",
-                fontSize = 14.sp,
+                style = MaterialTheme.typography.titleSmall,
                 color = Color(0xFF933C9F),
-                modifier = Modifier.clickable { }
+                modifier = Modifier.clickable {
+                    navController.navigate(Routes.Subscribe.route)
+                }
             )
         }
 
@@ -245,15 +247,13 @@ fun HomeForYou(modifier: Modifier = Modifier) {
                     Column {
                         Text(
                             text = "GO PREMIUM 👑",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                         )
                         Spacer(modifier.height(14.dp))
                         Text(
                             text = "Upgrade to premium\nget more profit\nnow!",
-                            fontSize = 20.sp,
+                            style = MaterialTheme.typography.headlineLarge,
                             color = Color(0xff863D3D),
-                            fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier.height(16.dp))
                         Icon(
@@ -300,13 +300,12 @@ fun HomeCategory(modifier: Modifier = Modifier) {
         ) {
             Text(
                 text = "Categories",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.headlineMedium,
                 color = Color.Black
             )
             Text(
                 text = "See all",
-                fontSize = 14.sp,
+                style = MaterialTheme.typography.titleSmall,
                 color = Color(0xFF933C9F),
                 modifier = modifier.clickable {
 
@@ -319,7 +318,7 @@ fun HomeCategory(modifier: Modifier = Modifier) {
         // Grid View
         LazyVerticalStaggeredGrid (
             columns = StaggeredGridCells.Fixed(2),
-            modifier.height(550.dp),
+            modifier.height(350.dp),
             contentPadding = PaddingValues(4.dp),
             verticalItemSpacing = 12.dp,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -370,8 +369,7 @@ fun HomeCategoryItem(modifier: Modifier = Modifier, category: CategoryData, isLa
             ) {
                 Text(
                     text = category.name,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleLarge,
                     color = Color.Black
                 )
                 Image(

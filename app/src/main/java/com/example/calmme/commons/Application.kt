@@ -15,19 +15,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.calmme.R
 import com.example.calmme.pages.assesment.AssesmentScreen
+import com.example.calmme.pages.assesment.AssesmentViewModel
 import com.example.calmme.pages.authentication.AuthScreen
 import com.example.calmme.pages.authentication.AuthViewModel
-import com.example.calmme.pages.community.CommunityScreen
 import com.example.calmme.pages.consultation.AppointmentScreen
 import com.example.calmme.pages.consultation.ConsultationScreen
+import com.example.calmme.pages.consultation.ConsultationViewModel
 import com.example.calmme.pages.history.HistoryScreen
 import com.example.calmme.pages.home.HomeScreen
+import com.example.calmme.pages.meditate.MeditateScreen
+import com.example.calmme.pages.meditate.MusicScreen
 import com.example.calmme.pages.profile.ProfileScreen
 import com.example.calmme.pages.subscribe.SubscribeScreen
 
@@ -38,17 +43,19 @@ data class NavigationItem(
 )
 
 @Composable
-fun Application(authViewModel: AuthViewModel) {
+fun Application(
+    authViewModel: AuthViewModel,
+    consultationViewModel: ConsultationViewModel,
+    assesmentViewModel: AssesmentViewModel,
+) {
     val navController = rememberNavController()
 
-    // Menyediakan NavController ke seluruh composable di dalamnya
     CompositionLocalProvider(LocalNavController provides navController) {
-        // Daftar item navigasi di Bottom Navigation
         val navigationItems = listOf(
             NavigationItem(Routes.Home.route, R.drawable.ic_home, "Home"),
             NavigationItem(Routes.Consultation.route, R.drawable.ic_consul, "Consultation"),
             NavigationItem(Routes.History.route, R.drawable.ic_history, "History"),
-            NavigationItem(Routes.Community.route, R.drawable.ic_community, "Community")
+            NavigationItem(Routes.Profile.route, R.drawable.ic_community, "Profile")
         )
 
         Scaffold(
@@ -101,13 +108,24 @@ fun Application(authViewModel: AuthViewModel) {
             ) {
                 composable(Routes.Authentication.route) { AuthScreen(authViewModel) }
                 composable(Routes.Home.route) { HomeScreen(authViewModel = authViewModel) }
-                composable(Routes.Consultation.route) { ConsultationScreen() }
+                composable(Routes.Consultation.route) {
+                    ConsultationScreen(consultationViewModel)
+                }
+                composable(Routes.Appointment.route) {
+                    AppointmentScreen(consultationViewModel)
+                }
                 composable(Routes.History.route) { HistoryScreen() }
-                composable(Routes.Community.route) { CommunityScreen() }
                 composable(Routes.Profile.route) { ProfileScreen() }
-                composable(Routes.Assesment.route) { AssesmentScreen() }
+                composable(Routes.Assesment.route) { AssesmentScreen(assesmentViewModel) }
                 composable(Routes.Subscribe.route) { SubscribeScreen() }
-                composable(Routes.Appointment.route) { AppointmentScreen() }
+                composable(Routes.Meditate.route) { MeditateScreen(navController) }
+                composable(
+                    route = "music/{audioResId}",
+                    arguments = listOf(navArgument("audioResId") { type = NavType.IntType })
+                ) { backStackEntry ->
+                    val audioResId = backStackEntry.arguments?.getInt("audioResId") ?: 0
+                    MusicScreen(navController, audioResId)
+                }
             }
         }
     }
@@ -121,8 +139,8 @@ fun shouldShowBottomBar(): Boolean {
 
     val noBottomBarScreens = listOf(
         Routes.Authentication.route,
+        Routes.Appointment.route,
+        Routes.Assesment.route,
     )
-
-    // Jika `currentRoute` tidak null dan tidak termasuk dalam daftar layar tanpa BottomBar
     return currentRoute != null && currentRoute !in noBottomBarScreens
 }

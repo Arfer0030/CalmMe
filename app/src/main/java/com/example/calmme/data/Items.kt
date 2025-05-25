@@ -53,18 +53,4 @@ val categoryList = listOf(
         Color(0xffFBFFA8),
         Routes.DailyMood.route
     ),
-    CategoryData(
-        "Subscribe \uD83D\uDC51",
-        R.drawable.ct_subs,
-        Color(0xffF7E8F8),
-        Color(0xffCEBFE6),
-        Routes.Subscribe.route
-    ),
-    CategoryData(
-        "Community",
-        R.drawable.foryou_2,
-        Color(0xffFDFFDC),
-        Color(0xffFBFFA8),
-        Routes.Community.route
-    ),
 )
