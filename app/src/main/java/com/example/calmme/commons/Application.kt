@@ -30,6 +30,8 @@ import com.example.calmme.pages.authentication.AuthViewModel
 import com.example.calmme.pages.consultation.AppointmentScreen
 import com.example.calmme.pages.consultation.ConsultationScreen
 import com.example.calmme.pages.consultation.ConsultationViewModel
+import com.example.calmme.pages.dailymood.DailyMoodScreen
+import com.example.calmme.pages.dailymood.DailyMoodViewModel
 import com.example.calmme.pages.history.HistoryScreen
 import com.example.calmme.pages.home.HomeScreen
 import com.example.calmme.pages.meditate.MeditateScreen
@@ -48,6 +50,7 @@ fun Application(
     authViewModel: AuthViewModel,
     consultationViewModel: ConsultationViewModel,
     assesmentViewModel: AssesmentViewModel,
+    dailyMoodViewModel: DailyMoodViewModel,
 ) {
     val navController = rememberNavController()
 
@@ -108,7 +111,7 @@ fun Application(
                     .padding(innerPadding)
             ) {
                 composable(Routes.Authentication.route) { AuthScreen(authViewModel) }
-                composable(Routes.Home.route) { HomeScreen(authViewModel = authViewModel) }
+                composable(Routes.Home.route) { HomeScreen(authViewModel = authViewModel, dailyMoodViewModel = dailyMoodViewModel) }
                 composable(Routes.Consultation.route) {
                     ConsultationScreen(consultationViewModel)
                 }
@@ -119,6 +122,7 @@ fun Application(
                 composable(Routes.Profile.route) { ProfileScreen() }
                 composable(Routes.Assesment.route) { AssesmentScreen(assesmentViewModel) }
                 composable(Routes.InitAssesment.route) { InitAssestScreen() }
+                composable(Routes.DailyMood.route) { DailyMoodScreen(dailyMoodViewModel) }
                 composable(Routes.Subscribe.route) { SubscribeScreen() }
                 composable(Routes.Meditate.route) { MeditateScreen(navController) }
                 composable(
@@ -144,6 +148,7 @@ fun shouldShowBottomBar(): Boolean {
         Routes.Appointment.route,
         Routes.Assesment.route,
         Routes.InitAssesment.route,
+        Routes.DailyMood.route
     )
     return currentRoute != null && currentRoute !in noBottomBarScreens
 }
