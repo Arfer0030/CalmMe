@@ -24,20 +24,24 @@ import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -50,11 +54,14 @@ import com.example.calmme.data.categoryList
 import com.example.calmme.data.moods
 import com.example.calmme.pages.authentication.AuthState
 import com.example.calmme.pages.authentication.AuthViewModel
+import com.example.calmme.pages.dailymood.DailyMoodViewModel
 import com.google.firebase.auth.FirebaseAuth
 
+// HomeScreen.kt
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier, authViewModel: AuthViewModel) {
+fun HomeScreen(modifier: Modifier = Modifier, authViewModel: AuthViewModel, dailyMoodViewModel: DailyMoodViewModel) {
     val navController = LocalNavController.current
+    val context = LocalContext.current
     val auth = FirebaseAuth.getInstance()
     val user = auth.currentUser
     val authState by authViewModel.authState.observeAsState()
@@ -87,15 +94,22 @@ fun HomeScreen(modifier: Modifier = Modifier, authViewModel: AuthViewModel) {
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item { HomeHeader(user?.displayName ?: "Guest", authViewModel = authViewModel) }
+            item {
+                HomeHeader(
+                    user?.displayName ?: "Guest",
+                    authViewModel = authViewModel,
+                    dailyMoodViewModel = dailyMoodViewModel
+                )
+            }
             item { HomeForYou() }
         }
     }
 }
 
 
+
 @Composable
-fun HomeHeader(username: String, modifier: Modifier = Modifier, authViewModel: AuthViewModel) {
+fun HomeHeader(username: String, modifier: Modifier = Modifier, authViewModel: AuthViewModel, dailyMoodViewModel: DailyMoodViewModel) {
     val navController = LocalNavController.current
     Column {
         Spacer(
@@ -138,49 +152,100 @@ fun HomeHeader(username: String, modifier: Modifier = Modifier, authViewModel: A
                 )
             }
         }
-        HomeMood()
+        HomeMood(dailyMoodViewModel = dailyMoodViewModel)
     }
 }
 
 
+// HomeMood.kt
 @Composable
-fun HomeMood(modifier: Modifier = Modifier) {
+fun HomeMood(modifier: Modifier = Modifier, dailyMoodViewModel: DailyMoodViewModel) {
+    val selectedMood by dailyMoodViewModel.selectedMood.collectAsState()
+    val isLoading by dailyMoodViewModel.isLoading.collectAsState()
+
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text("how are you today?", style = MaterialTheme.typography.headlineMedium)
 
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.padding(16.dp),
+                color = Color(0xff933C9F)
+            )
+        }
+
         LazyRow(
-            modifier
+            modifier = modifier
                 .fillMaxWidth()
-                .padding(vertical = 2.dp, horizontal = 24.dp),
+                .padding(vertical = 2.dp, horizontal = 26.dp),
             horizontalArrangement = Arrangement.spacedBy(30.dp)
         ) {
             items(moods) { mood ->
-                MoodItem(name = mood.first, icon = mood.second)
+                MoodItem(
+                    name = mood.first,
+                    icon = mood.second,
+                    isSelected = selectedMood == mood.first,
+                    onMoodSelected = {
+                        if (!isLoading) {
+                            dailyMoodViewModel.selectMood(mood.first)
+                        }
+                    }
+                )
             }
+        }
+
+        // Tampilkan mood yang dipilih hari ini
+        selectedMood?.let { mood ->
+            Text(
+                text = "Today's mood: $mood",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color(0xff933C9F),
+                modifier = Modifier.padding(top = 8.dp)
+            )
         }
     }
 }
 
+
+// MoodItem.kt
 @Composable
-fun MoodItem(modifier: Modifier = Modifier,name: String, icon: Int) {
+fun MoodItem(
+    modifier: Modifier = Modifier,
+    name: String,
+    icon: Int,
+    isSelected: Boolean = false,
+    onMoodSelected: () -> Unit
+) {
     Column(
-        modifier.width(80.dp)
+        modifier = modifier
+            .width(90.dp)
             .padding(vertical = 8.dp)
-            .clickable {  },
+            .clickable { onMoodSelected() }
+            .background(
+                if (isSelected) Color(0xff933C9F).copy(alpha = 0.1f) else Color.Transparent,
+                RoundedCornerShape(12.dp)
+            )
+            .padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
         Image(
             painter = painterResource(id = icon),
             contentDescription = name,
-            modifier = Modifier.size(80.dp)
+            modifier = Modifier.size(90.dp),
+            alpha = if (isSelected) 1f else 0.7f
         )
-        Text(name, style = MaterialTheme.typography.titleSmall, color = Color(0xff933C9F))
+        Text(
+            name,
+            style = MaterialTheme.typography.titleSmall,
+            color = if (isSelected) Color(0xff933C9F) else Color(0xff933C9F).copy(alpha = 0.7f),
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+        )
     }
 }
+
 
 @Composable
 fun HomeForYou(modifier: Modifier = Modifier) {
