@@ -119,7 +119,7 @@ fun Application(
                     AppointmentScreen(consultationViewModel)
                 }
                 composable(Routes.History.route) { HistoryScreen() }
-                composable(Routes.Profile.route) { ProfileScreen(navController) }
+                composable(Routes.Profile.route) { ProfileScreen(authViewModel = authViewModel) }
                 composable(Routes.Assesment.route) { AssesmentScreen(assesmentViewModel) }
                 composable(Routes.InitAssesment.route) { InitAssestScreen() }
                 composable(Routes.DailyMood.route) { DailyMoodScreen(dailyMoodViewModel) }

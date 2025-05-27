@@ -338,7 +338,7 @@ fun TestResultPopup(
                         .padding(horizontal = 24.dp, vertical = 8.dp)
                 ) {
                     Text(
-                        text = "Skor: $score",
+                        text = "Score: $score",
                         style = MaterialTheme.typography.headlineMedium,
                         color = Color(0xFF933C9F)
                     )

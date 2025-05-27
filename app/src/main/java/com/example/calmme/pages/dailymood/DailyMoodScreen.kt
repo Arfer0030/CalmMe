@@ -1,5 +1,6 @@
 package com.example.calmme.pages.dailymood
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -46,19 +47,22 @@ import kotlinx.serialization.Serializable
 
 @Composable
 fun DailyMoodScreen(dailyMoodViewModel: DailyMoodViewModel) {
-    val moodHistory by dailyMoodViewModel.moodHistory.collectAsState()
     val selectedPeriod = remember { mutableStateOf("Week") }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Color(0xFFF5EFFF), Color(0xFFF9F2FF))))
+            .background(
+                Brush.verticalGradient(
+                    listOf(Color(0xFFe0c6e1), Color(0xFFfdfbfe), Color(0xFFf7e9f8))
+                )
+            )
             .padding(16.dp)
     ) {
         TopBar()
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(20.dp))
         MoodStreakSection(dailyMoodViewModel = dailyMoodViewModel)
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(26.dp))
         MoodChartSection(
             dailyMoodViewModel = dailyMoodViewModel,
             selectedPeriod = selectedPeriod.value,
@@ -69,12 +73,11 @@ fun DailyMoodScreen(dailyMoodViewModel: DailyMoodViewModel) {
     }
 }
 
-
 @Composable
 fun TopBar() {
     val navController = LocalNavController.current
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().padding(8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -94,14 +97,15 @@ fun TopBar() {
     }
 }
 
+@SuppressLint("StateFlowValueCalledInComposition")
 @Composable
 fun MoodStreakSection(dailyMoodViewModel: DailyMoodViewModel) {
-    val streak = dailyMoodViewModel.calculateStreak()
+    val streak = dailyMoodViewModel.calculateStreakFromHistory(dailyMoodViewModel.moodHistory.value)
     val recentMoods = dailyMoodViewModel.getRecentMoods(7) // Last 7 days
 
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Mood", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Text("Mood", style = MaterialTheme.typography.headlineMedium)
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = streak.toString(),
@@ -109,7 +113,7 @@ fun MoodStreakSection(dailyMoodViewModel: DailyMoodViewModel) {
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp
             )
-            Text(" Day Streak", fontSize = 16.sp)
+            Text(" Day Streak", style = MaterialTheme.typography.headlineSmall)
         }
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -132,33 +136,52 @@ fun MoodCard(day: String, mood: String, moodIcon: Int) {
     Column(
         modifier = Modifier
             .width(80.dp)
-            .background(Color(0xFFD9C2FF), shape = RoundedCornerShape(12.dp))
+            .background(
+                if (mood == "empty") Color(0xFFF5F5F5) else Color(0xFFD9C2FF),
+                shape = RoundedCornerShape(12.dp)
+            )
             .padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = day,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 12.sp
+            style = MaterialTheme.typography.titleMedium,
         )
         Spacer(modifier = Modifier.height(4.dp))
 
-        // Mood Icon
-        Icon(
-            painter = painterResource(id = moodIcon),
-            contentDescription = mood,
-            modifier = Modifier.size(40.dp),
-            tint = Color.Unspecified
-        )
+        // Mood Icon atau Empty State
+        if (mood == "empty") {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(Color(0xFFE0E0E0), shape = CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "?",
+                    fontSize = 20.sp,
+                    color = Color.Gray,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        } else {
+            Icon(
+                painter = painterResource(id = moodIcon),
+                contentDescription = mood,
+                modifier = Modifier.size(40.dp),
+                tint = Color.Unspecified
+            )
+        }
 
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = mood,
-            fontSize = 10.sp,
-            color = Color.Gray
+            text = if (mood == "empty") "Empty" else mood,
+            style = MaterialTheme.typography.bodyLarge,
+            color = if (mood == "empty") Color.Gray else Color.Black
         )
     }
 }
+
 
 @Composable
 fun MoodChartSection(
@@ -167,7 +190,7 @@ fun MoodChartSection(
     onPeriodChanged: (String) -> Unit
 ) {
     Column {
-        Text("Mood Chart", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+        Text("Mood Chart", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(8.dp))
 
         // Period Selection
@@ -186,6 +209,7 @@ fun MoodChartSection(
                 ) {
                     Text(
                         text = period,
+                        style = MaterialTheme.typography.titleLarge,
                         color = if (selectedPeriod == period) Color.White else Color.Black
                     )
                 }
@@ -193,7 +217,13 @@ fun MoodChartSection(
         }
 
         Spacer(modifier = Modifier.height(12.dp))
-        Text("${selectedPeriod}ly Average", fontSize = 12.sp, color = Color.Gray)
+        // Hitung fill count
+        val (fillCount, totalDays) = dailyMoodViewModel.calculateMoodFillCounts(selectedPeriod)
+        Text(
+            text = "${selectedPeriod}ly Average ($fillCount of $totalDays days filled)",
+            style = MaterialTheme.typography.titleSmall,
+            color = Color.Gray
+        )
         Spacer(modifier = Modifier.height(8.dp))
 
         // Chart
@@ -213,8 +243,17 @@ fun MoodChartSection(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("100%", fontSize = 10.sp)
-                    Text("50%", fontSize = 10.sp)
+                    Text(
+                        text = "$fillCount of $totalDays",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF933C9F)
+                    )
+                    Text(
+                        text = "${(fillCount.toFloat() / totalDays * 100).toInt()}% filled",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = Color.Gray
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -260,7 +299,7 @@ fun MoodChartSection(
         val dateRange = dailyMoodViewModel.getDateRange(selectedPeriod) // Gunakan ViewModel
         Text(
             text = dateRange,
-            fontSize = 12.sp,
+            style = MaterialTheme.typography.titleSmall,
             modifier = Modifier.align(Alignment.CenterHorizontally),
             color = Color.Gray
         )
@@ -326,5 +365,5 @@ fun MotivationCard() {
 data class MoodEntry(
     val mood: String,
     val date: String,
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long
 )

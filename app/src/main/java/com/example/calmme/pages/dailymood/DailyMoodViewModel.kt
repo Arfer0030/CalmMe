@@ -9,15 +9,16 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import android.content.Context
+import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.AndroidViewModel
+import com.example.calmme.BuildConfig
 import com.example.calmme.R
 import com.example.calmme.data.moods
 import java.text.SimpleDateFormat
 import java.util.*
 
 class DailyMoodViewModel(application: Application) : AndroidViewModel(application) {
-    @SuppressLint("StaticFieldLeak")
     private val context = getApplication<Application>().applicationContext
     private val moodDataStore = MoodDataStore(context)
 
@@ -30,9 +31,26 @@ class DailyMoodViewModel(application: Application) : AndroidViewModel(applicatio
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
+    private val _streak = MutableStateFlow(0)
+    val streak: StateFlow<Int> = _streak
+
     init {
         loadTodaysMood()
         loadMoodHistory()
+        if (BuildConfig.DEBUG) {
+            debugDataStore()
+        }
+    }
+
+    private fun debugDataStore() {
+        viewModelScope.launch {
+            moodDataStore.context.moodDataStore.data.collect { preferences ->
+                Log.d("MoodDataStore", "DataStore size: ${preferences.asMap().size}")
+                preferences.asMap().forEach { (key, value) ->
+                    Log.d("MoodDataStore", "${key.name}: $value")
+                }
+            }
+        }
     }
 
     fun selectMood(mood: String) {
@@ -49,6 +67,9 @@ class DailyMoodViewModel(application: Application) : AndroidViewModel(applicatio
 
                 moodDataStore.saveMoodEntry(moodEntry)
                 _selectedMood.value = mood
+
+                // Refresh data setelah menyimpan
+                loadMoodHistory()
 
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -75,6 +96,7 @@ class DailyMoodViewModel(application: Application) : AndroidViewModel(applicatio
             try {
                 moodDataStore.getMoodHistory().collect { history ->
                     _moodHistory.value = history.sortedByDescending { it.timestamp }
+                    _streak.value = calculateStreakFromHistory(history)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -82,35 +104,26 @@ class DailyMoodViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    fun getTodaysMoodEntry(): MoodEntry? {
-        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-        return _moodHistory.value.find { it.date == today }
-    }
+    fun calculateStreakFromHistory(history: List<MoodEntry>): Int {
+        if (history.isEmpty()) return 0
 
-    fun getMoodsByDateRange(startDate: String, endDate: String): List<MoodEntry> {
-        return _moodHistory.value.filter { entry ->
-            entry.date in startDate..endDate
-        }
-    }
-
-    // Pindahkan helper functions ke dalam ViewModel
-    fun calculateStreak(): Int {
-        val moodHistory = _moodHistory.value
-        if (moodHistory.isEmpty()) return 0
-
-        val sortedHistory = moodHistory.sortedByDescending { it.date }
+        val sortedHistory = history.sortedByDescending { it.date }
         var streak = 0
-        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-        var currentDate = today
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val cal = Calendar.getInstance()
 
-        for (entry in sortedHistory) {
-            if (entry.date == currentDate) {
+        // Mulai dari hari ini
+        var currentDate = dateFormat.format(Date())
+
+        for (i in 0 until 365) { // Maksimal 365 hari
+            val hasEntry = sortedHistory.any { it.date == currentDate }
+
+            if (hasEntry) {
                 streak++
-                // Move to previous day
-                val cal = Calendar.getInstance()
-                cal.time = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(currentDate)!!
+                // Pindah ke hari sebelumnya
+                cal.time = dateFormat.parse(currentDate)!!
                 cal.add(Calendar.DAY_OF_MONTH, -1)
-                currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(cal.time)
+                currentDate = dateFormat.format(cal.time)
             } else {
                 break
             }
@@ -134,7 +147,7 @@ class DailyMoodViewModel(application: Application) : AndroidViewModel(applicatio
             val dayString = dayFormat.format(cal.time)
 
             val moodEntry = moodHistory.find { it.date == date }
-            val mood = moodEntry?.mood ?: "neutral"
+            val mood = moodEntry?.mood ?: "empty" // Ubah dari "neutral" ke "empty"
 
             recentMoods.add(dayString to mood)
         }
@@ -144,40 +157,93 @@ class DailyMoodViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun calculateMoodPercentages(period: String): List<Pair<String, Float>> {
         val moodHistory = _moodHistory.value
-        val cal = Calendar.getInstance()
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val currentDate = Date()
 
-        // Filter data based on period
-        val filteredHistory = when (period) {
+        // Tentukan rentang tanggal berdasarkan periode
+        val (startDate, endDate, totalDays) = when (period) {
             "Week" -> {
-                cal.add(Calendar.DAY_OF_MONTH, -7)
-                val weekAgo = dateFormat.format(cal.time)
-                moodHistory.filter { it.date >= weekAgo }
+                val weekRange = getWeekRange(currentDate)
+                Triple(weekRange.first, weekRange.second, 7)
             }
             "Month" -> {
-                cal.add(Calendar.MONTH, -1)
-                val monthAgo = dateFormat.format(cal.time)
-                moodHistory.filter { it.date >= monthAgo }
+                val monthRange = getMonthRange(currentDate)
+                Triple(monthRange.first, monthRange.second, 30)
             }
-            else -> moodHistory
+            else -> {
+                val weekRange = getWeekRange(currentDate)
+                Triple(weekRange.first, weekRange.second, 7)
+            }
         }
 
-        if (filteredHistory.isEmpty()) {
-            return moods.map { it.first to 0f }
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val startDateStr = dateFormat.format(startDate)
+        val endDateStr = dateFormat.format(endDate)
+
+        // Filter mood dalam rentang tanggal yang fixed
+        val filteredHistory = moodHistory.filter { entry ->
+            entry.date >= startDateStr && entry.date <= endDateStr
         }
 
+        // Hitung persentase berdasarkan total hari dalam periode
         val moodCounts = filteredHistory.groupingBy { it.mood }.eachCount()
-        val total = filteredHistory.size.toFloat()
 
         return moods.map { (mood, _) ->
             val count = moodCounts[mood] ?: 0
-            val percentage = (count / total) * 100
+            val percentage = (count.toFloat() / totalDays.toFloat()) * 100
             mood to percentage
         }
     }
 
+    private fun getWeekRange(date: Date): Pair<Date, Date> {
+        val cal = Calendar.getInstance()
+        cal.time = date
+
+        // Set ke hari Minggu (SUNDAY = 1)
+        val dayOfWeek = cal.get(Calendar.DAY_OF_WEEK)
+        val daysToSubtract = if (dayOfWeek == Calendar.SUNDAY) 0 else dayOfWeek - Calendar.SUNDAY
+
+        // Mundur ke hari Minggu
+        cal.add(Calendar.DAY_OF_MONTH, -daysToSubtract)
+        val startDate = cal.time
+
+        // Maju ke hari Sabtu (6 hari setelah Minggu)
+        cal.add(Calendar.DAY_OF_MONTH, 6)
+        val endDate = cal.time
+
+        return Pair(startDate, endDate)
+    }
+
+    private fun getMonthRange(date: Date): Pair<Date, Date> {
+        val cal = Calendar.getInstance()
+        cal.time = date
+
+        // Hitung minggu ke berapa dalam bulan ini
+        val dayOfMonth = cal.get(Calendar.DAY_OF_MONTH)
+        val weekOfMonth = ((dayOfMonth - 1) / 7) + 1
+
+        // Set ke hari pertama minggu ini dalam bulan
+        val dayOfWeek = cal.get(Calendar.DAY_OF_WEEK)
+        val daysToSubtract = if (dayOfWeek == Calendar.SUNDAY) 0 else dayOfWeek - Calendar.SUNDAY
+        cal.add(Calendar.DAY_OF_MONTH, -daysToSubtract)
+
+        // Mundur ke awal periode 30 hari
+        val weeksToSubtract = (weekOfMonth - 1) * 7
+        cal.add(Calendar.DAY_OF_MONTH, -weeksToSubtract)
+        val startDate = cal.time
+
+        // Maju 29 hari untuk total 30 hari
+        cal.add(Calendar.DAY_OF_MONTH, 29)
+        val endDate = cal.time
+
+        return Pair(startDate, endDate)
+    }
+
+
     fun getMoodIcon(mood: String): Int {
-        return moods.find { it.first == mood }?.second ?: R.drawable.md_calm
+        return when (mood) {
+            "empty" -> R.drawable.ic_empty_mood // Tambahkan icon untuk mood kosong
+            else -> moods.find { it.first == mood }?.second ?: R.drawable.md_calm
+        }
     }
 
     fun getMoodColor(mood: String): Color {
@@ -191,26 +257,60 @@ class DailyMoodViewModel(application: Application) : AndroidViewModel(applicatio
             "surprised" -> Color(0xFFFFB366)
             "bored" -> Color(0xFFB3B3B3)
             "disappoint" -> Color(0xFF9999FF)
+            "empty" -> Color(0xFFE0E0E0) // Warna abu-abu untuk mood kosong
             else -> Color(0xFFB9A6FF)
         }
     }
 
+    fun calculateMoodFillCounts(period: String): Pair<Int, Int> {
+        val moodHistory = _moodHistory.value
+        val currentDate = Date()
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+
+        val (startDate, endDate, totalDays) = when (period) {
+            "Week" -> {
+                val weekRange = getWeekRange(currentDate)
+                Triple(weekRange.first, weekRange.second, 7)
+            }
+            "Month" -> {
+                val monthRange = getMonthRange(currentDate)
+                Triple(monthRange.first, monthRange.second, 30)
+            }
+            else -> {
+                val weekRange = getWeekRange(currentDate)
+                Triple(weekRange.first, weekRange.second, 7)
+            }
+        }
+
+        val startDateStr = dateFormat.format(startDate)
+        val endDateStr = dateFormat.format(endDate)
+
+        // Filter mood dalam rentang tanggal yang fixed
+        val filteredHistory = moodHistory.filter { entry ->
+            entry.date >= startDateStr && entry.date <= endDateStr && entry.mood != "empty"
+        }
+
+        val fillCount = filteredHistory.size
+        return Pair(fillCount, totalDays)
+    }
+
+
     fun getDateRange(period: String): String {
-        val cal = Calendar.getInstance()
+        val currentDate = Date()
         val dateFormat = SimpleDateFormat("MMM dd, yy", Locale.getDefault())
 
         return when (period) {
             "Week" -> {
-                val endDate = dateFormat.format(cal.time)
-                cal.add(Calendar.DAY_OF_MONTH, -6)
-                val startDate = dateFormat.format(cal.time)
-                "$startDate - $endDate"
+                val (startDate, endDate) = getWeekRange(currentDate)
+                val startStr = dateFormat.format(startDate)
+                val endStr = dateFormat.format(endDate)
+                "$startStr - $endStr"
             }
             "Month" -> {
-                val endDate = dateFormat.format(cal.time)
-                cal.add(Calendar.MONTH, -1)
-                val startDate = dateFormat.format(cal.time)
-                "$startDate - $endDate"
+                val (startDate, endDate) = getMonthRange(currentDate)
+                val startStr = dateFormat.format(startDate)
+                val endStr = dateFormat.format(endDate)
+                "$startStr - $endStr"
             }
             else -> ""
         }

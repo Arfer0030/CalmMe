@@ -16,7 +16,7 @@ import java.util.*
 
 val Context.moodDataStore: DataStore<Preferences> by preferencesDataStore(name = "mood_preferences")
 
-class MoodDataStore(private val context: Context) {
+class MoodDataStore(val context: Context) {
     private val json = Json {
         ignoreUnknownKeys = true
         encodeDefaults = true
@@ -46,12 +46,8 @@ class MoodDataStore(private val context: Context) {
             currentHistory.removeAll { it.date == moodEntry.date }
             currentHistory.add(moodEntry)
 
-            // Simpan hanya 30 hari terakhir
-            val thirtyDaysAgo = System.currentTimeMillis() - (30 * 24 * 60 * 60 * 1000)
-            val filteredHistory = currentHistory.filter { it.timestamp > thirtyDaysAgo }
-
             // Encode menggunakan Kotlin Serialization
-            preferences[MOOD_HISTORY_KEY] = json.encodeToString(filteredHistory)
+            preferences[MOOD_HISTORY_KEY] = json.encodeToString(currentHistory)
         }
     }
 

@@ -89,7 +89,7 @@ fun AuthTabSwitcher(isLogin: Boolean, onTabSelected: (Boolean) -> Unit) {
             .background(Color(0xFFB68AD6))
             .padding(horizontal = 0.dp)
             .width(350.dp)
-            .height(45.dp)
+            .height(40.dp)
     ) {
         Button(
             onClick = { onTabSelected(true) },

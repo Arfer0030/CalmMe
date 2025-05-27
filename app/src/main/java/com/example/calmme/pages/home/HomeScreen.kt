@@ -138,11 +138,7 @@ fun HomeHeader(username: String, modifier: Modifier = Modifier, authViewModel: A
             }
             IconButton(
                 onClick = {
-                    authViewModel.logout {
-                        // Navigasi ke Authentication dan hapus stack
-                        navController.navigate(Routes.Authentication.route) {
-                            popUpTo(0) { inclusive = true }
-                        }}
+
                 },
             ) {
                 Icon(

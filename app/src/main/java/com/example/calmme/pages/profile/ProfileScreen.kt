@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -21,12 +22,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.calmme.R
+import com.example.calmme.commons.LocalNavController
+import com.example.calmme.commons.Routes
+import com.example.calmme.pages.authentication.AuthViewModel
 
 val montserrat = FontFamily(Font(R.font.montserrat_bold))
 val nunito = FontFamily(Font(R.font.nunito_regular))
 
 @Composable
-fun ProfileScreen(navController: NavController) {
+fun ProfileScreen(authViewModel: AuthViewModel) {
+    val navController = LocalNavController.current
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -39,145 +44,174 @@ fun ProfileScreen(navController: NavController) {
                 )
             )
     ) {
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_back),
-                contentDescription = "Back",
-                modifier = Modifier
-                    .align(Alignment.Start)
-                    .size(24.dp)
-                    .clickable {
-                        navController.navigate("home")
-                    }
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Image(
-                painter = painterResource(id = R.drawable.profile),
-                contentDescription = "Profile Picture",
-                modifier = Modifier
-                    .size(100.dp)
-                    .background(Color.Gray, CircleShape)
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "user123",
-                fontFamily = montserrat,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
-
-            Text(
-                text = "available",
-                fontFamily = nunito,
-                fontSize = 14.sp,
-                color = Color.Gray
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(
-                        Brush.horizontalGradient(
-                            listOf(Color(0xFFD1C4E9), Color(0xFFFFF9C4))
-                        )
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(112.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_back),
+                        contentDescription = "Back",
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clickable {
+                                navController.navigate("home")
+                            }
                     )
-                    .clickable { }
-                    .padding(horizontal = 24.dp, vertical = 12.dp)
-            ) {
+                    Text(
+                        text = "Profile", style = MaterialTheme.typography.headlineSmall
+                    )
+                }
+            }
+
+            item { Spacer(modifier = Modifier.height(16.dp)) }
+
+            item {
+                Image(
+                    painter = painterResource(id = R.drawable.profile),
+                    contentDescription = "Profile Picture",
+                    modifier = Modifier
+                        .size(100.dp)
+                        .background(Color.Gray, CircleShape)
+                )
+            }
+
+            item { Spacer(modifier = Modifier.height(8.dp)) }
+
+            item {
                 Text(
-                    text = "Edit Profile",
-                    fontFamily = nunito,
-                    fontWeight = FontWeight.Medium,
+                    text = "user123",
+                    fontFamily = montserrat,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
                     color = Color.Black
                 )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(Color(0xE6DAD0F8))
-                    .padding(24.dp)
-            ) {
-                val menuItems = listOf(
-                    "Privacy",
-                    "Security",
-                    "Notifications",
-                    "Membership",
-                    "Help",
-                    "About"
+            item {
+                Text(
+                    text = "available",
+                    fontFamily = nunito,
+                    fontSize = 14.sp,
+                    color = Color.Gray
                 )
+            }
 
-                menuItems.forEach { item ->
+            item { Spacer(modifier = Modifier.height(16.dp)) }
+
+            item {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(
+                            Brush.horizontalGradient(
+                                listOf(Color(0xFFD1C4E9), Color(0xFFFFF9C4))
+                            )
+                        )
+                        .clickable { }
+                        .padding(horizontal = 24.dp, vertical = 12.dp)
+                ) {
+                    Text(
+                        text = "Edit Profile",
+                        fontFamily = nunito,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.Black
+                    )
+                }
+            }
+
+            item { Spacer(modifier = Modifier.height(32.dp)) }
+
+            item {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(Color(0xE6DAD0F8))
+                        .padding(24.dp)
+                ) {
+                    val menuItems = listOf(
+                        "Privacy",
+                        "Security",
+                        "Notifications",
+                        "Membership",
+                        "Help",
+                        "About"
+                    )
+
+                    menuItems.forEach { item ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 12.dp)
+                                .clickable { }
+                        ) {
+                            val iconRes = when (item.lowercase()) {
+                                "privacy" -> R.drawable.privacy
+                                "security" -> R.drawable.security
+                                "notifications" -> R.drawable.notifications
+                                "membership" -> R.drawable.membership
+                                "help" -> R.drawable.help
+                                "about" -> R.drawable.about
+                                else -> android.R.drawable.ic_menu_help
+                            }
+
+                            Image(
+                                painter = painterResource(id = iconRes),
+                                contentDescription = "$item Icon",
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .padding(end = 20.dp)
+                            )
+
+                            Text(
+                                text = item,
+                                fontFamily = nunito,
+                                fontSize = 16.sp,
+                                color = Color.Black
+                            )
+                        }
+                    }
+
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 12.dp)
-                            .clickable { }
+                            .clickable {
+                                authViewModel.logout {
+                                    // Navigasi ke Authentication dan hapus stack
+                                    navController.navigate(Routes.Authentication.route) {
+                                        popUpTo(0) { inclusive = true }
+                                    }
+                                }
+                            }
                     ) {
-                        val iconRes = when (item.lowercase()) {
-                            "privacy" -> R.drawable.privacy
-                            "security" -> R.drawable.security
-                            "notifications" -> R.drawable.notifications
-                            "membership" -> R.drawable.membership
-                            "help" -> R.drawable.help
-                            "about" -> R.drawable.about
-                            else -> android.R.drawable.ic_menu_help
-                        }
-
                         Image(
-                            painter = painterResource(id = iconRes),
-                            contentDescription = "$item Icon",
+                            painter = painterResource(id = R.drawable.logout),
+                            contentDescription = "Logout Icon",
                             modifier = Modifier
                                 .size(36.dp)
                                 .padding(end = 20.dp)
                         )
 
                         Text(
-                            text = item,
+                            text = "Logout",
                             fontFamily = nunito,
                             fontSize = 16.sp,
-                            color = Color.Black
+                            color = Color.Red
                         )
                     }
-                }
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 12.dp)
-                        .clickable { }
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.logout),
-                        contentDescription = "Logout Icon",
-                        modifier = Modifier
-                            .size(36.dp)
-                            .padding(end = 20.dp)
-                    )
-
-                    Text(
-                        text = "Logout",
-                        fontFamily = nunito,
-                        fontSize = 16.sp,
-                        color = Color.Red
-                    )
                 }
             }
         }
