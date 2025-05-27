@@ -117,7 +117,7 @@ fun ProfileScreen(authViewModel: AuthViewModel) {
                                 listOf(Color(0xFFD1C4E9), Color(0xFFFFF9C4))
                             )
                         )
-                        .clickable { }
+                        .clickable {navController.navigate(Routes.EditProfile.route) }
                         .padding(horizontal = 24.dp, vertical = 12.dp)
                 ) {
                     Text(
@@ -190,7 +190,7 @@ fun ProfileScreen(authViewModel: AuthViewModel) {
                             .padding(vertical = 12.dp)
                             .clickable {
                                 authViewModel.logout {
-                                    // Navigasi ke Authentication dan hapus stack
+                                    // Navigasi ke Authentication dan hapus stack hey wassup nibba
                                     navController.navigate(Routes.Authentication.route) {
                                         popUpTo(0) { inclusive = true }
                                     }

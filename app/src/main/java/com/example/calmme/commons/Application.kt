@@ -38,6 +38,8 @@ import com.example.calmme.pages.meditate.MeditateScreen
 import com.example.calmme.pages.meditate.MusicScreen
 import com.example.calmme.pages.profile.ProfileScreen
 import com.example.calmme.pages.subscribe.SubscribeScreen
+import com.example.calmme.pages.profile.EditProfileScreen
+
 
 data class NavigationItem(
     val route: String,
@@ -132,6 +134,8 @@ fun Application(
                     val audioResId = backStackEntry.arguments?.getInt("audioResId") ?: 0
                     MusicScreen(navController, audioResId)
                 }
+                composable(Routes.EditProfile.route) {EditProfileScreen()}
+
             }
         }
     }
