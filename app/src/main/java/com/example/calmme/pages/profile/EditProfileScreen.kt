@@ -2,6 +2,7 @@ package com.example.calmme.pages.profile
 
 import android.app.DatePickerDialog
 import android.widget.DatePicker
+import android.widget.Toast
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -13,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -20,20 +22,36 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.calmme.R
 import com.example.calmme.commons.LocalNavController
+import com.example.calmme.pages.authentication.AuthViewModel
 import kotlinx.coroutines.launch
 import java.util.*
 
 @Composable
-fun EditProfileScreen() {
+fun EditProfileScreen(authViewModel: AuthViewModel) {
     val navController = LocalNavController.current
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
     var username by remember { mutableStateOf("") }
-    var bio by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var gender by remember { mutableStateOf("male") }
     var dateOfBirth by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+
+    // Load user data saat screen pertama kali dibuka
+    LaunchedEffect(Unit) {
+        authViewModel.getUserData(
+            onSuccess = { userData ->
+                username = userData["username"] as? String ?: ""
+                email = userData["email"] as? String ?: ""
+                gender = userData["gender"] as? String ?: "male"
+                dateOfBirth = userData["dateOfBirth"] as? String ?: ""
+            },
+            onError = { error ->
+                Toast.makeText(context, "Failed to load user data: $error", Toast.LENGTH_SHORT).show()
+            }
+        )
+    }
 
     Box(
         modifier = Modifier
@@ -50,8 +68,7 @@ fun EditProfileScreen() {
             modifier = Modifier.verticalScroll(rememberScrollState())
         ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
@@ -63,12 +80,10 @@ fun EditProfileScreen() {
                             navController.popBackStack()
                         }
                 )
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(96.dp))
                 Text(
                     text = "Edit Profile",
-                    fontFamily = montserrat,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.headlineSmall,
                 )
             }
 
@@ -83,19 +98,9 @@ fun EditProfileScreen() {
                     .background(Color.Gray)
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Change profile picture",
-                color = Color(0xFF9C27B0),
-                fontFamily = nunito,
-                fontSize = 14.sp,
-                modifier = Modifier.clickable { /* TODO: Upload logic */ }
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             textField("Username", username) { username = it }
-            textField("Bio", bio) { bio = it }
             textField("Email", email) { email = it }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -135,17 +140,13 @@ fun EditProfileScreen() {
                         painter = painterResource(id = R.drawable.date),
                         contentDescription = "Calendar Icon",
                         modifier = Modifier.clickable {
-                            val calendar = Calendar.getInstance()
-                            val datePicker = DatePickerDialog(
-                                context,
-                                { _: DatePicker, year: Int, month: Int, day: Int ->
-                                    dateOfBirth = "%02d/%02d/%d".format(day, month + 1, year)
-                                },
-                                calendar.get(Calendar.YEAR),
-                                calendar.get(Calendar.MONTH),
-                                calendar.get(Calendar.DAY_OF_MONTH)
+                            showPurpleDatePicker(
+                                context = context,
+                                currentDate = dateOfBirth,
+                                onDateSelected = { selectedDate ->
+                                    dateOfBirth = selectedDate
+                                }
                             )
-                            datePicker.show()
                         }
                     )
                 },
@@ -160,22 +161,115 @@ fun EditProfileScreen() {
 
             Button(
                 onClick = {
+                    if (username.isBlank() || email.isBlank()) {
+                        Toast.makeText(context, "Username and Email cannot be empty", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+
+                    isLoading = true
                     coroutineScope.launch {
-                        navController.popBackStack()
+                        // Update username
+                        authViewModel.updateUsername(
+                            newUsername = username,
+                            onSuccess = {
+                                // Update email
+                                authViewModel.updateEmail(
+                                    newEmail = email,
+                                    onSuccess = {
+                                        // Update gender
+                                        authViewModel.updateGender(
+                                            gender = gender,
+                                            onSuccess = {
+                                                // Update date of birth
+                                                authViewModel.updateDateOfBirth(
+                                                    dateOfBirth = dateOfBirth,
+                                                    onSuccess = {
+                                                        isLoading = false
+                                                        Toast.makeText(context, "Profile updated successfully", Toast.LENGTH_SHORT).show()
+                                                        navController.popBackStack()
+                                                    },
+                                                    onError = { error ->
+                                                        isLoading = false
+                                                        Toast.makeText(context, "Failed to update date of birth: $error", Toast.LENGTH_SHORT).show()
+                                                    }
+                                                )
+                                            },
+                                            onError = { error ->
+                                                isLoading = false
+                                                Toast.makeText(context, "Failed to update gender: $error", Toast.LENGTH_SHORT).show()
+                                            }
+                                        )
+                                    },
+                                    onError = { error ->
+                                        isLoading = false
+                                        Toast.makeText(context, "Failed to update email: $error", Toast.LENGTH_SHORT).show()
+                                    }
+                                )
+                            },
+                            onError = { error ->
+                                isLoading = false
+                                Toast.makeText(context, "Failed to update username: $error", Toast.LENGTH_SHORT).show()
+                            }
+                        )
                     }
                 },
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8E44AD)),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp)
+                    .height(50.dp),
+                enabled = !isLoading
             ) {
-                Text("Save", fontFamily = nunito, color = Color.White)
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                } else {
+                    Text("Save", fontFamily = nunito, color = Color.White)
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
+}
+
+// Fungsi untuk menampilkan DatePicker dengan warna ungu
+fun showPurpleDatePicker(
+    context: android.content.Context,
+    currentDate: String,
+    onDateSelected: (String) -> Unit
+) {
+    val calendar = Calendar.getInstance()
+
+    // Parse tanggal saat ini jika ada
+    if (currentDate.isNotEmpty()) {
+        try {
+            val parts = currentDate.split("/")
+            if (parts.size == 3) {
+                calendar.set(parts[2].toInt(), parts[1].toInt() - 1, parts[0].toInt())
+            }
+        } catch (e: Exception) {
+            // Gunakan tanggal saat ini jika parsing gagal
+        }
+    }
+
+    val datePicker = DatePickerDialog(
+        context,
+        R.style.PurpleDatePickerTheme, // Custom theme untuk warna ungu
+        { _: DatePicker, year: Int, month: Int, day: Int ->
+            val selectedDate = "%02d/%02d/%d".format(day, month + 1, year)
+            onDateSelected(selectedDate)
+        },
+        calendar.get(Calendar.YEAR),
+        calendar.get(Calendar.MONTH),
+        calendar.get(Calendar.DAY_OF_MONTH)
+    )
+
+    // Set warna accent untuk DatePicker
+    datePicker.datePicker.setBackgroundColor(Color(0xFFF3E7FE).toArgb())
+    datePicker.show()
 }
 
 @Composable
@@ -187,7 +281,11 @@ fun textField(label: String, value: String, onValueChange: (String) -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
-        shape = RoundedCornerShape(10.dp)
+        shape = RoundedCornerShape(10.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = Color(0xFF8E44AD),
+            focusedLabelColor = Color(0xFF8E44AD)
+        )
     )
 }
 

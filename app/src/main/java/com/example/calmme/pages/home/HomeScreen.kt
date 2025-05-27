@@ -34,7 +34,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -56,6 +58,7 @@ import com.example.calmme.pages.authentication.AuthState
 import com.example.calmme.pages.authentication.AuthViewModel
 import com.example.calmme.pages.dailymood.DailyMoodViewModel
 import com.google.firebase.auth.FirebaseAuth
+import java.util.Calendar
 
 // HomeScreen.kt
 @Composable
@@ -111,10 +114,24 @@ fun HomeScreen(modifier: Modifier = Modifier, authViewModel: AuthViewModel, dail
 @Composable
 fun HomeHeader(username: String, modifier: Modifier = Modifier, authViewModel: AuthViewModel, dailyMoodViewModel: DailyMoodViewModel) {
     val navController = LocalNavController.current
-    Column {
-        Spacer(
-            modifier.padding(vertical = 14.dp),
+    var userData by remember { mutableStateOf<Map<String, Any>>(emptyMap()) }
+    var actualUsername by remember { mutableStateOf(username) }
+
+    // Ambil data user dari Firestore
+    LaunchedEffect(Unit) {
+        authViewModel.getUserData(
+            onSuccess = { data ->
+                userData = data
+                actualUsername = data["username"] as? String ?: username
+            },
+            onError = { error ->
+                // Handle error
+            }
         )
+    }
+
+    Column {
+        Spacer(modifier.padding(vertical = 14.dp))
         Row(
             modifier.fillMaxWidth().padding(horizontal = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween
@@ -132,13 +149,13 @@ fun HomeHeader(username: String, modifier: Modifier = Modifier, authViewModel: A
                         }
                 )
                 Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
-                    Text("Good Morning,", style = MaterialTheme.typography.bodyLarge)
-                    Text("$username!", style = MaterialTheme.typography.titleMedium)
+                    Text(getGreeting(), style = MaterialTheme.typography.bodyLarge)
+                    Text("$actualUsername!", style = MaterialTheme.typography.titleLarge)
                 }
             }
             IconButton(
                 onClick = {
-
+                    navController.navigate(Routes.History.route)
                 },
             ) {
                 Icon(
@@ -149,6 +166,43 @@ fun HomeHeader(username: String, modifier: Modifier = Modifier, authViewModel: A
             }
         }
         HomeMood(dailyMoodViewModel = dailyMoodViewModel)
+    }
+}
+
+// Fungsi untuk greeting berdasarkan waktu
+@Composable
+fun getGreeting(): String {
+    val calendar = Calendar.getInstance()
+    return when (calendar.get(Calendar.HOUR_OF_DAY)) {
+        in 0..11 -> "Good Morning,"
+        in 12..17 -> "Good Afternoon,"
+        else -> "Good Evening,"
+    }
+}
+
+@Composable
+fun SubscriptionBadge(userData: Map<String, Any>) {
+    val subscriptionStatus = userData["subscriptionStatus"] as? String ?: "inactive"
+
+    if (subscriptionStatus == "active") {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .background(
+                    Color(0xFFFFD700),
+                    RoundedCornerShape(12.dp)
+                )
+                .padding(horizontal = 8.dp, vertical = 4.dp)
+        ) {
+            Text("\uD83D\uDC51")
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                "Premium",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF933C9F),
+                fontWeight = FontWeight.Bold
+            )
+        }
     }
 }
 
