@@ -134,7 +134,7 @@ fun Application(
                     val audioResId = backStackEntry.arguments?.getInt("audioResId") ?: 0
                     MusicScreen(navController, audioResId)
                 }
-                composable(Routes.EditProfile.route) {EditProfileScreen()}
+                composable(Routes.EditProfile.route) {EditProfileScreen(authViewModel = authViewModel)}
 
             }
         }

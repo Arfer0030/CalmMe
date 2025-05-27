@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+        <style name="PurpleDatePickerTheme" parent="Theme.Material3.DayNight.Dialog">
+            <item name="colorPrimary">#8E44AD</item>
+            <item name="colorPrimaryVariant">#6A1B9A</item>
+            <item name="colorAccent">#8E44AD</item>
+            <item name="android:colorAccent">#8E44AD</item>
+            <item name="android:datePickerStyle">@style/PurpleDatePickerStyle</item>
+        </style>
+
+        <style name="PurpleDatePickerStyle" parent="android:Widget.Material.DatePicker">
+            <item name="android:headerBackground">#8E44AD</item>
+            <item name="android:colorAccent">#8E44AD</item>
+        </style>
+</resources>

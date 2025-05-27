@@ -8,7 +8,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,6 +32,27 @@ val nunito = FontFamily(Font(R.font.nunito_regular))
 @Composable
 fun ProfileScreen(authViewModel: AuthViewModel) {
     val navController = LocalNavController.current
+
+    // State untuk menyimpan data user
+    var username by remember { mutableStateOf("Loading...") }
+    var email by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(true) }
+
+    // Load data user dari Firestore
+    LaunchedEffect(Unit) {
+        authViewModel.getUserData(
+            onSuccess = { userData ->
+                username = userData["username"] as? String ?: "User"
+                email = userData["email"] as? String ?: ""
+                isLoading = false
+            },
+            onError = { error ->
+                username = "User"
+                isLoading = false
+            }
+        )
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -88,18 +109,25 @@ fun ProfileScreen(authViewModel: AuthViewModel) {
             item { Spacer(modifier = Modifier.height(8.dp)) }
 
             item {
-                Text(
-                    text = "user123",
-                    fontFamily = montserrat,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
-                )
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = Color(0xFF8E44AD),
+                        modifier = Modifier.size(20.dp)
+                    )
+                } else {
+                    Text(
+                        text = username,
+                        fontFamily = montserrat,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+                }
             }
 
             item {
                 Text(
-                    text = "available",
+                    text = if (isLoading) "Loading..." else "available",
                     fontFamily = nunito,
                     fontSize = 14.sp,
                     color = Color.Gray
@@ -117,7 +145,7 @@ fun ProfileScreen(authViewModel: AuthViewModel) {
                                 listOf(Color(0xFFD1C4E9), Color(0xFFFFF9C4))
                             )
                         )
-                        .clickable {navController.navigate(Routes.EditProfile.route) }
+                        .clickable { navController.navigate(Routes.EditProfile.route) }
                         .padding(horizontal = 24.dp, vertical = 12.dp)
                 ) {
                     Text(
@@ -190,7 +218,6 @@ fun ProfileScreen(authViewModel: AuthViewModel) {
                             .padding(vertical = 12.dp)
                             .clickable {
                                 authViewModel.logout {
-                                    // Navigasi ke Authentication dan hapus stack hey wassup nibba
                                     navController.navigate(Routes.Authentication.route) {
                                         popUpTo(0) { inclusive = true }
                                     }

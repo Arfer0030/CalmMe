@@ -84,10 +84,10 @@ fun RegisterScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         AuthButton(text = "Sign Up", route = Routes.Home.route, authViewModel = authViewModel) {
-            if (email.isBlank() || password.isBlank()) {
-                Toast.makeText(context, "Email and Password can't be empty", Toast.LENGTH_SHORT).show()
+            if (username.isBlank() || email.isBlank() || password.isBlank()) {
+                Toast.makeText(context, "All fields are required", Toast.LENGTH_SHORT).show()
             } else {
-                authViewModel.signup(email, password)
+                authViewModel.signup(username, email, password)
             }
         }
 
