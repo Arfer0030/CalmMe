@@ -61,7 +61,7 @@ fun Application(
             NavigationItem(Routes.Home.route, R.drawable.ic_home, "Home"),
             NavigationItem(Routes.Consultation.route, R.drawable.ic_consul, "Consultation"),
             NavigationItem(Routes.History.route, R.drawable.ic_history, "History"),
-            NavigationItem(Routes.Profile.route, R.drawable.ic_community, "Profile")
+            NavigationItem(Routes.Profile.route, R.drawable.ic_profile, "Profile")
         )
 
         Scaffold(

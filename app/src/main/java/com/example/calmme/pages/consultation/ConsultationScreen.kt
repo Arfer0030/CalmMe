@@ -89,7 +89,7 @@ fun ConsulHeader() {
                     contentDescription = "Profile",
                     modifier = Modifier.size(42.dp)
                 )
-                Spacer(modifier = Modifier.width(90.dp))
+                Spacer(modifier = Modifier.width(85.dp))
                 Text(
                     text = "Consultation",
                     style = MaterialTheme.typography.headlineSmall
