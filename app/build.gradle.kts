@@ -38,6 +38,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -55,6 +56,7 @@ dependencies {
     implementation(libs.androidx.foundation.layout.android)
     implementation(libs.firebase.auth)
     implementation(libs.androidx.runtime.livedata)
+    implementation(libs.firebase.firestore)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -69,4 +71,11 @@ dependencies {
 
     // jetpack compose view model
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.0")
+
+    implementation ("androidx.datastore:datastore-preferences:1.1.7")
+    implementation ("androidx.datastore:datastore-core:1.1.7")
+
+    implementation ("com.google.android.material:material:1.11.0")
+    implementation ("androidx.compose.material3:material3:1.1.2")
+
 }

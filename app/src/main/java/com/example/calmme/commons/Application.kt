@@ -24,17 +24,22 @@ import androidx.navigation.navArgument
 import com.example.calmme.R
 import com.example.calmme.pages.assesment.AssesmentScreen
 import com.example.calmme.pages.assesment.AssesmentViewModel
+import com.example.calmme.pages.assesment.InitAssestScreen
 import com.example.calmme.pages.authentication.AuthScreen
 import com.example.calmme.pages.authentication.AuthViewModel
 import com.example.calmme.pages.consultation.AppointmentScreen
 import com.example.calmme.pages.consultation.ConsultationScreen
 import com.example.calmme.pages.consultation.ConsultationViewModel
+import com.example.calmme.pages.dailymood.DailyMoodScreen
+import com.example.calmme.pages.dailymood.DailyMoodViewModel
 import com.example.calmme.pages.history.HistoryScreen
 import com.example.calmme.pages.home.HomeScreen
 import com.example.calmme.pages.meditate.MeditateScreen
 import com.example.calmme.pages.meditate.MusicScreen
 import com.example.calmme.pages.profile.ProfileScreen
 import com.example.calmme.pages.subscribe.SubscribeScreen
+import com.example.calmme.pages.profile.EditProfileScreen
+
 
 data class NavigationItem(
     val route: String,
@@ -47,6 +52,7 @@ fun Application(
     authViewModel: AuthViewModel,
     consultationViewModel: ConsultationViewModel,
     assesmentViewModel: AssesmentViewModel,
+    dailyMoodViewModel: DailyMoodViewModel,
 ) {
     val navController = rememberNavController()
 
@@ -55,7 +61,7 @@ fun Application(
             NavigationItem(Routes.Home.route, R.drawable.ic_home, "Home"),
             NavigationItem(Routes.Consultation.route, R.drawable.ic_consul, "Consultation"),
             NavigationItem(Routes.History.route, R.drawable.ic_history, "History"),
-            NavigationItem(Routes.Profile.route, R.drawable.ic_community, "Profile")
+            NavigationItem(Routes.Profile.route, R.drawable.ic_profile, "Profile")
         )
 
         Scaffold(
@@ -107,7 +113,7 @@ fun Application(
                     .padding(innerPadding)
             ) {
                 composable(Routes.Authentication.route) { AuthScreen(authViewModel) }
-                composable(Routes.Home.route) { HomeScreen(authViewModel = authViewModel) }
+                composable(Routes.Home.route) { HomeScreen(authViewModel = authViewModel, dailyMoodViewModel = dailyMoodViewModel) }
                 composable(Routes.Consultation.route) {
                     ConsultationScreen(consultationViewModel)
                 }
@@ -115,8 +121,10 @@ fun Application(
                     AppointmentScreen(consultationViewModel)
                 }
                 composable(Routes.History.route) { HistoryScreen() }
-                composable(Routes.Profile.route) { ProfileScreen() }
+                composable(Routes.Profile.route) { ProfileScreen(authViewModel = authViewModel) }
                 composable(Routes.Assesment.route) { AssesmentScreen(assesmentViewModel) }
+                composable(Routes.InitAssesment.route) { InitAssestScreen() }
+                composable(Routes.DailyMood.route) { DailyMoodScreen(dailyMoodViewModel) }
                 composable(Routes.Subscribe.route) { SubscribeScreen() }
                 composable(Routes.Meditate.route) { MeditateScreen(navController) }
                 composable(
@@ -126,6 +134,8 @@ fun Application(
                     val audioResId = backStackEntry.arguments?.getInt("audioResId") ?: 0
                     MusicScreen(navController, audioResId)
                 }
+                composable(Routes.EditProfile.route) {EditProfileScreen(authViewModel = authViewModel)}
+
             }
         }
     }
@@ -141,6 +151,8 @@ fun shouldShowBottomBar(): Boolean {
         Routes.Authentication.route,
         Routes.Appointment.route,
         Routes.Assesment.route,
+        Routes.InitAssesment.route,
+        Routes.DailyMood.route
     )
     return currentRoute != null && currentRoute !in noBottomBarScreens
 }

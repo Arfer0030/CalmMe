@@ -48,10 +48,10 @@ class AssesmentViewModel : ViewModel() {
     fun getTotalScore(): Int = _questions.value.sumOf { it.answer.coerceAtLeast(0) }
 
     fun getResultCategory(score: Int): String = when (score) {
-        in 0..4 -> "Kecemasan Normal"
-        in 5..9 -> "Gejala Ringan"
-        in 10..14 -> "Gejala Sedang"
-        in 15..21 -> "Gejala Berat"
-        else -> "Tidak diketahui"
+        in 0..4 -> "Minimal Anxiety"
+        in 5..9 -> "Mild Anxiety"
+        in 10..14 -> "Moderate Anxiety"
+        in 15..21 -> "Severe Anxiety"
+        else -> "Error"
     }
 }

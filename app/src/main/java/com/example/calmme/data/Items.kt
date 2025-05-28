@@ -37,7 +37,7 @@ val categoryList = listOf(
         R.drawable.ct_test,
         Color(0xffF7E8F8),
         Color(0xffCEBFE6),
-        Routes.Assesment.route
+        Routes.InitAssesment.route
     ),
     CategoryData(
         "Consultation",
