@@ -38,6 +38,11 @@ fun EditProfileScreen(authViewModel: AuthViewModel) {
     var dateOfBirth by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
 
+    // Track original values untuk deteksi perubahan
+    var originalUsername by remember { mutableStateOf("") }
+    var originalGender by remember { mutableStateOf("") }
+    var originalDateOfBirth by remember { mutableStateOf("") }
+
     // Load user data saat screen pertama kali dibuka
     LaunchedEffect(Unit) {
         authViewModel.getUserData(
@@ -46,6 +51,11 @@ fun EditProfileScreen(authViewModel: AuthViewModel) {
                 email = userData["email"] as? String ?: ""
                 gender = userData["gender"] as? String ?: "male"
                 dateOfBirth = userData["dateOfBirth"] as? String ?: ""
+
+                // Simpan nilai original
+                originalUsername = username
+                originalGender = gender
+                originalDateOfBirth = dateOfBirth
             },
             onError = { error ->
                 Toast.makeText(context, "Failed to load user data: $error", Toast.LENGTH_SHORT).show()
@@ -83,7 +93,9 @@ fun EditProfileScreen(authViewModel: AuthViewModel) {
                 Spacer(modifier = Modifier.width(96.dp))
                 Text(
                     text = "Edit Profile",
-                    style = MaterialTheme.typography.headlineSmall,
+                    fontFamily = montserrat,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
                 )
             }
 
@@ -100,8 +112,24 @@ fun EditProfileScreen(authViewModel: AuthViewModel) {
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            textField("Username", username) { username = it }
-            textField("Email", email) { email = it }
+            TextField("Username", username) { username = it }
+
+            // Email field - READ ONLY
+            OutlinedTextField(
+                value = email,
+                onValueChange = { }, // Tidak bisa diubah
+                label = { Text("Email", fontFamily = nunito) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                shape = RoundedCornerShape(10.dp),
+                enabled = false, // Disable editing
+                colors = OutlinedTextFieldDefaults.colors(
+                    disabledBorderColor = Color.LightGray,
+                    disabledLabelColor = Color.Gray,
+                    disabledTextColor = Color.Gray
+                )
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
             Text("Gender", fontFamily = nunito, fontSize = 14.sp, modifier = Modifier.align(Alignment.Start))
@@ -154,6 +182,10 @@ fun EditProfileScreen(authViewModel: AuthViewModel) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF8E44AD),
+                    focusedLabelColor = Color(0xFF8E44AD)
+                ),
                 shape = RoundedCornerShape(10.dp)
             )
 
@@ -161,54 +193,29 @@ fun EditProfileScreen(authViewModel: AuthViewModel) {
 
             Button(
                 onClick = {
-                    if (username.isBlank() || email.isBlank()) {
-                        Toast.makeText(context, "Username and Email cannot be empty", Toast.LENGTH_SHORT).show()
+                    if (username.isBlank()) {
+                        Toast.makeText(context, "Username cannot be empty", Toast.LENGTH_SHORT).show()
                         return@Button
                     }
 
                     isLoading = true
                     coroutineScope.launch {
-                        // Update username
-                        authViewModel.updateUsername(
-                            newUsername = username,
+                        updateProfileData(
+                            authViewModel = authViewModel,
+                            username = username,
+                            originalUsername = originalUsername,
+                            gender = gender,
+                            originalGender = originalGender,
+                            dateOfBirth = dateOfBirth,
+                            originalDateOfBirth = originalDateOfBirth,
                             onSuccess = {
-                                // Update email
-                                authViewModel.updateEmail(
-                                    newEmail = email,
-                                    onSuccess = {
-                                        // Update gender
-                                        authViewModel.updateGender(
-                                            gender = gender,
-                                            onSuccess = {
-                                                // Update date of birth
-                                                authViewModel.updateDateOfBirth(
-                                                    dateOfBirth = dateOfBirth,
-                                                    onSuccess = {
-                                                        isLoading = false
-                                                        Toast.makeText(context, "Profile updated successfully", Toast.LENGTH_SHORT).show()
-                                                        navController.popBackStack()
-                                                    },
-                                                    onError = { error ->
-                                                        isLoading = false
-                                                        Toast.makeText(context, "Failed to update date of birth: $error", Toast.LENGTH_SHORT).show()
-                                                    }
-                                                )
-                                            },
-                                            onError = { error ->
-                                                isLoading = false
-                                                Toast.makeText(context, "Failed to update gender: $error", Toast.LENGTH_SHORT).show()
-                                            }
-                                        )
-                                    },
-                                    onError = { error ->
-                                        isLoading = false
-                                        Toast.makeText(context, "Failed to update email: $error", Toast.LENGTH_SHORT).show()
-                                    }
-                                )
+                                isLoading = false
+                                Toast.makeText(context, "Profile updated successfully", Toast.LENGTH_SHORT).show()
+                                navController.popBackStack()
                             },
                             onError = { error ->
                                 isLoading = false
-                                Toast.makeText(context, "Failed to update username: $error", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
                             }
                         )
                     }
@@ -234,6 +241,7 @@ fun EditProfileScreen(authViewModel: AuthViewModel) {
         }
     }
 }
+
 
 // Fungsi untuk menampilkan DatePicker dengan warna ungu
 fun showPurpleDatePicker(
@@ -273,7 +281,7 @@ fun showPurpleDatePicker(
 }
 
 @Composable
-fun textField(label: String, value: String, onValueChange: (String) -> Unit) {
+fun TextField(label: String, value: String, onValueChange: (String) -> Unit) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
@@ -313,5 +321,90 @@ fun GenderOption(
             modifier = Modifier.size(40.dp)
         )
         Text(label, fontFamily = nunito, fontSize = 14.sp)
+    }
+}
+
+fun updateProfileData(
+    authViewModel: AuthViewModel,
+    username: String,
+    originalUsername: String,
+    gender: String,
+    originalGender: String,
+    dateOfBirth: String,
+    originalDateOfBirth: String,
+    onSuccess: () -> Unit,
+    onError: (String) -> Unit
+) {
+    var updateCount = 0
+    var successCount = 0
+    var hasError = false
+    var errorMessage = ""
+
+    // Hitung berapa field yang perlu diupdate
+    val fieldsToUpdate = mutableListOf<String>()
+
+    if (username != originalUsername) fieldsToUpdate.add("username")
+    if (gender != originalGender) fieldsToUpdate.add("gender")
+    if (dateOfBirth != originalDateOfBirth) fieldsToUpdate.add("dateOfBirth")
+
+    if (fieldsToUpdate.isEmpty()) {
+        onSuccess()
+        return
+    }
+
+    updateCount = fieldsToUpdate.size
+
+    // Update username hanya jika berubah
+    if (username != originalUsername) {
+        authViewModel.updateUsername(
+            newUsername = username,
+            onSuccess = {
+                successCount++
+                if (successCount == updateCount && !hasError) {
+                    onSuccess()
+                }
+            },
+            onError = { error ->
+                hasError = true
+                errorMessage = "Failed to update username: $error"
+                onError(errorMessage)
+            }
+        )
+    }
+
+    // Update gender hanya jika berubah
+    if (gender != originalGender) {
+        authViewModel.updateGender(
+            gender = gender,
+            onSuccess = {
+                successCount++
+                if (successCount == updateCount && !hasError) {
+                    onSuccess()
+                }
+            },
+            onError = { error ->
+                hasError = true
+                errorMessage = "Failed to update gender: $error"
+                onError(errorMessage)
+            }
+        )
+    }
+
+    // Update date of birth hanya jika berubah
+    if (dateOfBirth != originalDateOfBirth) {
+        authViewModel.updateDateOfBirth(
+            dateOfBirth = dateOfBirth,
+            onSuccess = {
+                successCount++
+                if (successCount == updateCount && !hasError) {
+                    onSuccess()
+                }
+            },
+            onError = { error ->
+                hasError = true
+                errorMessage = "Failed to update date of birth: $error"
+                onError(errorMessage)
+            }
+        )
     }
 }

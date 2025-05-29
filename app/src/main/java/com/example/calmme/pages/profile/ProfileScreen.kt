@@ -182,7 +182,28 @@ fun ProfileScreen(authViewModel: AuthViewModel) {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 12.dp)
-                                .clickable { }
+                                .clickable {
+                                    when (item.lowercase()) {
+                                        "security" -> {
+                                            navController.navigate(Routes.EditSecurity.route)
+                                        }
+                                        "privacy" -> {
+                                            // Navigate ke Privacy screen
+                                        }
+                                        "notifications" -> {
+                                            // Navigate ke Notifications screen
+                                        }
+                                        "membership" -> {
+                                            // Navigate ke Membership screen
+                                        }
+                                        "help" -> {
+                                            // Navigate ke Help screen
+                                        }
+                                        "about" -> {
+                                            // Navigate ke About screen
+                                        }
+                                    }
+                                }
                         ) {
                             val iconRes = when (item.lowercase()) {
                                 "privacy" -> R.drawable.privacy
@@ -210,7 +231,6 @@ fun ProfileScreen(authViewModel: AuthViewModel) {
                             )
                         }
                     }
-
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
@@ -244,3 +264,9 @@ fun ProfileScreen(authViewModel: AuthViewModel) {
         }
     }
 }
+
+data class MenuItem(
+    val title: String,
+    val icon: Int,
+    val onClick: () -> Unit
+)

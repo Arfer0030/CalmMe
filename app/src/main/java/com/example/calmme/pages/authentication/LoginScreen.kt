@@ -41,6 +41,12 @@ fun LoginScreen(
             is AuthState.Authenticated -> navController.navigate(Routes.Home.route) {
                 popUpTo(Routes.Authentication.route) { inclusive = true }
             }
+            is AuthState.EmailNotVerified -> {
+                // Navigate ke EmailVerificationScreen jika email belum diverifikasi
+                val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+                val email = currentUser?.email ?: ""
+                navController.navigate(Routes.EmailVerification.createRoute(email))
+            }
             is AuthState.Error -> {
                 Toast.makeText(context, (authState as AuthState.Error).message, Toast.LENGTH_SHORT).show()
             }

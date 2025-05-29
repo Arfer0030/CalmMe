@@ -27,6 +27,7 @@ import com.example.calmme.pages.assesment.AssesmentViewModel
 import com.example.calmme.pages.assesment.InitAssestScreen
 import com.example.calmme.pages.authentication.AuthScreen
 import com.example.calmme.pages.authentication.AuthViewModel
+import com.example.calmme.pages.authentication.EmailVerificationScreen
 import com.example.calmme.pages.consultation.AppointmentScreen
 import com.example.calmme.pages.consultation.ConsultationScreen
 import com.example.calmme.pages.consultation.ConsultationViewModel
@@ -39,6 +40,7 @@ import com.example.calmme.pages.meditate.MusicScreen
 import com.example.calmme.pages.profile.ProfileScreen
 import com.example.calmme.pages.subscribe.SubscribeScreen
 import com.example.calmme.pages.profile.EditProfileScreen
+import com.example.calmme.pages.profile.EditSecurityScreen
 
 
 data class NavigationItem(
@@ -135,7 +137,18 @@ fun Application(
                     MusicScreen(navController, audioResId)
                 }
                 composable(Routes.EditProfile.route) {EditProfileScreen(authViewModel = authViewModel)}
-
+                composable(Routes.EditSecurity.route) { EditSecurityScreen(authViewModel = authViewModel) }
+                // Perbaikan untuk EmailVerificationScreen
+                composable(
+                    route = "email_verification/{email}",
+                    arguments = listOf(navArgument("email") { type = NavType.StringType })
+                ) { backStackEntry ->
+                    val email = backStackEntry.arguments?.getString("email") ?: ""
+                    EmailVerificationScreen(
+                        authViewModel = authViewModel,
+                        email = email
+                    )
+                }
             }
         }
     }
@@ -152,7 +165,10 @@ fun shouldShowBottomBar(): Boolean {
         Routes.Appointment.route,
         Routes.Assesment.route,
         Routes.InitAssesment.route,
-        Routes.DailyMood.route
+        Routes.DailyMood.route,
+        Routes.EmailVerification.route,
+        Routes.EditProfile.route,
     )
+
     return currentRoute != null && currentRoute !in noBottomBarScreens
 }

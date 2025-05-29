@@ -69,11 +69,23 @@ fun HomeScreen(modifier: Modifier = Modifier, authViewModel: AuthViewModel, dail
     val user = auth.currentUser
     val authState by authViewModel.authState.observeAsState()
 
-    // Navigasi otomatis ketika status tidak terotentikasi
+    // Sinkronisasi email saat user sudah login
     LaunchedEffect(authState) {
-        if (authState == AuthState.Unauthenticated) {
-            navController.navigate(Routes.Authentication.route) {
-                popUpTo(0) { inclusive = true }
+        when (authState) {
+            AuthState.Authenticated -> {
+                // BENAR - dipanggil saat user sudah login
+                authViewModel.checkAndUpdateEmailOnLogin {
+                    // Email sudah disinkronkan
+                }
+            }
+            AuthState.Unauthenticated -> {
+                // Navigasi ke login tanpa check email
+                navController.navigate(Routes.Authentication.route) {
+                    popUpTo(0) { inclusive = true }
+                }
+            }
+            else -> {
+                // Handle state lainnya jika diperlukan
             }
         }
     }
