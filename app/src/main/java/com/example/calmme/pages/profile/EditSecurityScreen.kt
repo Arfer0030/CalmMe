@@ -90,8 +90,7 @@ fun EditSecurityScreen(authViewModel: AuthViewModel) {
                 Spacer(modifier = Modifier.width(80.dp))
                 Text(
                     text = "Edit Security",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.headlineSmall,
                 )
             }
 

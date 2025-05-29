@@ -93,9 +93,7 @@ fun EditProfileScreen(authViewModel: AuthViewModel) {
                 Spacer(modifier = Modifier.width(96.dp))
                 Text(
                     text = "Edit Profile",
-                    fontFamily = montserrat,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.headlineSmall,
                 )
             }
 

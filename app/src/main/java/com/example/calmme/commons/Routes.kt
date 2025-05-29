@@ -19,4 +19,7 @@ sealed class Routes(val route: String) {
         fun createRoute(email: String) = "email_verification/$email"
     }
     object EditSecurity : Routes("edit_security")
+    object Payment : Routes("payment")
+    object Confirmation : Routes("confirmation")
+
 }
