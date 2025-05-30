@@ -1,5 +1,6 @@
 package com.example.calmme.pages.subscribe
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -12,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -20,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import com.example.calmme.R
 import com.example.calmme.commons.LocalNavController
 import com.example.calmme.commons.Routes
+import kotlinx.coroutines.launch
 
 data class PaymentMethod(
     val id: String,
@@ -30,10 +33,14 @@ data class PaymentMethod(
 @Composable
 fun PaymentScreen(viewModel: SubscribeViewModel) {
     val navController = LocalNavController.current
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     var selectedPayment by remember { mutableStateOf("bank") }
+    val isLoading by viewModel.isLoading.collectAsState()
+    val paymentType by viewModel.paymentType.collectAsState()
 
     val paymentMethods = listOf(
-        PaymentMethod("bank", "Bank", R.drawable.ic_bank),
+        PaymentMethod("bank_transfer", "Bank", R.drawable.ic_bank),
         PaymentMethod("shopeepay", "Shopeepay", R.drawable.ic_spay),
         PaymentMethod("dana", "Dana", R.drawable.ic_dana)
     )
@@ -119,8 +126,18 @@ fun PaymentScreen(viewModel: SubscribeViewModel) {
             // Add Button
             Button(
                 onClick = {
-                    viewModel.selectPayment(selectedPayment)
-                    navController.navigate(Routes.Confirmation.route)
+                    coroutineScope.launch {
+                        viewModel.updatePaymentMethod(
+                            paymentMethod = selectedPayment,
+                            onSuccess = {
+                                Toast.makeText(context, "Payment method updated successfully", Toast.LENGTH_SHORT).show()
+                                navController.navigate(Routes.Confirmation.route)
+                            },
+                            onError = { error ->
+                                Toast.makeText(context, "Failed to update payment method: $error", Toast.LENGTH_LONG).show()
+                            }
+                        )
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -128,14 +145,22 @@ fun PaymentScreen(viewModel: SubscribeViewModel) {
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF8E44AD)
                 ),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                enabled = !isLoading
             ) {
-                Text(
-                    text = "ADD",
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                } else {
+                    Text(
+                        text = "ADD",
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }

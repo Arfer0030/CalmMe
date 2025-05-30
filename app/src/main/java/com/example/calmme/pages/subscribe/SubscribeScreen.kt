@@ -1,5 +1,6 @@
 package com.example.calmme.pages.subscribe
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -13,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -22,6 +24,7 @@ import androidx.navigation.NavController
 import com.example.calmme.R
 import com.example.calmme.commons.LocalNavController
 import com.example.calmme.commons.Routes
+import kotlinx.coroutines.launch
 import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 
 data class SubscriptionPlan(
@@ -36,11 +39,15 @@ data class SubscriptionPlan(
 @Composable
 fun SubscribeScreen(viewModel: SubscribeViewModel) {
     val navController = LocalNavController.current
-    var selectedPlan by remember { mutableStateOf("basic") }
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    var selectedPlan by remember { mutableStateOf("") }
+    val isLoading by viewModel.isLoading.collectAsState()
+
 
     val plans = listOf(
         SubscriptionPlan(
-            id = "basic",
+            id = "consultation",
             title = "BASIC",
             price = "Rp 50.000,00 /consultation",
             description = "1x consultation access",
@@ -48,7 +55,7 @@ fun SubscribeScreen(viewModel: SubscribeViewModel) {
             color2 = Color(0xffB8F7FD)
         ),
         SubscriptionPlan(
-            id = "plus",
+            id = "subscription",
             title = "PLUS",
             price = "Rp 275.000,00 /month",
             description = "Get 1 month of unlimited consultation access",
@@ -56,6 +63,7 @@ fun SubscribeScreen(viewModel: SubscribeViewModel) {
             color2 = Color(0xffB8F7FD)
         )
     )
+
 
     Box(
         modifier = Modifier
@@ -139,7 +147,19 @@ fun SubscribeScreen(viewModel: SubscribeViewModel) {
             Button(
                 onClick = {
                     viewModel.selectPlan(selectedPlan)
-                    navController.navigate(Routes.Payment.route)
+
+                    // Langsung proses payment dan kirim ke Firestore
+                    coroutineScope.launch {
+                        viewModel.processPayment(
+                            onSuccess = {
+                                Toast.makeText(context, "Subscription created successfully!", Toast.LENGTH_SHORT).show()
+                                navController.navigate(Routes.Payment.route)
+                            },
+                            onError = { error ->
+                                Toast.makeText(context, "Failed to create subscription: $error", Toast.LENGTH_LONG).show()
+                            }
+                        )
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -147,14 +167,22 @@ fun SubscribeScreen(viewModel: SubscribeViewModel) {
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF8E44AD)
                 ),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                enabled = !isLoading
             ) {
-                Text(
-                    text = "BUY NOW",
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                } else {
+                    Text(
+                        text = "BUY NOW",
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }

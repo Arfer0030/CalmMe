@@ -62,6 +62,7 @@ class AppointmentViewModel(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
+    // Di AppointmentViewModel.kt - Update loadAvailableTimeSlots
     fun loadAvailableTimeSlots(psychologistId: String, date: String) {
         if (psychologistId.isEmpty() || date.isEmpty()) return
 
@@ -73,7 +74,8 @@ class AppointmentViewModel(
                     }
                     is Resource.Success -> {
                         _isLoading.value = false
-                        _availableTimeSlots.value = resource.data
+                        // Filter out booked time slots
+                        filterBookedTimeSlots(resource.data, psychologistId, date)
                     }
                     is Resource.Error -> {
                         _isLoading.value = false
@@ -83,6 +85,38 @@ class AppointmentViewModel(
             }
         }
     }
+
+    // Tambahkan fungsi baru untuk filter
+    private suspend fun filterBookedTimeSlots(
+        allTimeSlots: List<TimeSlot>,
+        psychologistId: String,
+        date: String
+    ) {
+        try {
+            val bookedAppointments = firestore.collection("appointments")
+                .whereEqualTo("psychologistId", psychologistId)
+                .whereEqualTo("appointmentDate", date)
+                .whereIn("status", listOf("scheduled", "confirmed"))
+                .get()
+                .await()
+
+            val bookedTimeSlots = bookedAppointments.documents.mapNotNull { doc ->
+                doc.getString("appointmentTime")
+            }.toSet()
+
+            val availableSlots = allTimeSlots.filter { timeSlot ->
+                val timeRange = "${timeSlot.startTime}-${timeSlot.endTime}"
+                timeRange !in bookedTimeSlots
+            }
+
+            _availableTimeSlots.value = availableSlots
+
+        } catch (e: Exception) {
+            _availableTimeSlots.value = allTimeSlots
+            _errorMessage.value = "Could not filter booked slots: ${e.message}"
+        }
+    }
+
 
     fun setSelectedDate(date: String) {
         _selectedDate.value = date
@@ -129,12 +163,10 @@ class AppointmentViewModel(
                 .await()
 
             // Update time slot availability
-            repository.bookAppointment(
+            repository.handlePostAppointmentCreation( // Panggil fungsi yang sudah diubah
                 psychologistId = psychologistId,
-                userId = userId,
                 date = date,
-                timeSlot = timeSlot,
-                consultationMethod = consultationMethod
+                timeSlot = timeSlot
             )
 
             _isLoading.value = false
@@ -221,5 +253,189 @@ class AppointmentViewModel(
             "$dayRange: $hours"
         }
     }
-}
 
+
+    // Di AppointmentViewModel.kt - Simplify fungsi ini
+    // Di AppointmentViewModel.kt - Ubah fungsi ini untuk selalu membuat appointment
+    suspend fun checkUserSubscriptionAndBook(
+        psychologistId: String,
+        onNavigateToSubscription: () -> Unit,
+        onBookingSuccess: (String) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        try {
+            val userId = auth.currentUser?.uid ?: throw Exception("User not authenticated")
+            _isLoading.value = true
+
+            // Check user subscription status
+            val userDoc = firestore.collection("users").document(userId).get().await()
+            val subscriptionStatus = userDoc.getString("subscriptionStatus") ?: "inactive"
+
+            if (subscriptionStatus == "active") {
+                // User has active subscription - book with paid status
+                val result = bookAppointmentWithSubscription(psychologistId)
+                when (result) {
+                    is Resource.Success -> onBookingSuccess(result.data)
+                    is Resource.Error -> onError(result.message)
+                    else -> onError("Unknown error occurred")
+                }
+            } else {
+                // User doesn't have active subscription - book with pending payment, then navigate
+                val result = bookAppointmentWithPendingPayment(psychologistId)
+                when (result) {
+                    is Resource.Success -> {
+                        onBookingSuccess(result.data)
+                        // Navigate ke subscription setelah appointment berhasil dibuat
+                        onNavigateToSubscription()
+                    }
+                    is Resource.Error -> onError(result.message)
+                    else -> onError("Unknown error occurred")
+                }
+            }
+
+        } catch (e: Exception) {
+            _isLoading.value = false
+            onError(e.message ?: "Failed to check subscription status")
+        }
+    }
+
+    // Di AppointmentViewModel.kt - Tambahkan fungsi ini
+    private suspend fun bookAppointmentWithPendingPayment(psychologistId: String): Resource<String> {
+        return try {
+            val userId = auth.currentUser?.uid ?: throw Exception("User not authenticated")
+            val timeSlot = _selectedTimeSlot.value ?: throw Exception("No time slot selected")
+            val date = _selectedDate.value.ifEmpty { throw Exception("No date selected") }
+            val consultationMethod = _selectedConsultationMethod.value.ifEmpty { throw Exception("No consultation method selected") }
+
+            val appointmentData = mapOf(
+                "userId" to userId,
+                "psychologistId" to psychologistId,
+                "appointmentDate" to date,
+                "appointmentTime" to "${timeSlot.startTime}-${timeSlot.endTime}",
+                "status" to "scheduled",
+                "paymentStatus" to "pending", // Set to pending for inactive users
+                "paymentMethod" to "", // Empty until payment is made
+                "consultationMethod" to consultationMethod,
+                "chatRoomId" to "",
+                "createdAt" to Timestamp.now(),
+                "updatedAt" to Timestamp.now()
+            )
+
+            val docRef = firestore.collection("appointments")
+                .add(appointmentData)
+                .await()
+
+            // Update time slot availability
+            repository.handlePostAppointmentCreation( // Panggil fungsi yang sudah diubah
+                psychologistId = psychologistId,
+                date = date,
+                timeSlot = timeSlot
+            )
+
+            _isLoading.value = false
+            Resource.Success(docRef.id)
+
+        } catch (e: Exception) {
+            _isLoading.value = false
+            Resource.Error(e.message ?: "Failed to book appointment")
+        }
+    }
+
+    // Di AppointmentViewModel.kt - Fungsi alternatif yang lebih sederhana
+    suspend fun createAppointmentDirectly(
+        psychologistId: String,
+        onSuccess: (String, Boolean) -> Unit, // (appointmentId, needsPayment)
+        onError: (String) -> Unit
+    ) {
+        try {
+            val userId = auth.currentUser?.uid ?: throw Exception("User not authenticated")
+            _isLoading.value = true
+
+            // Check subscription status
+            val userDoc = firestore.collection("users").document(userId).get().await()
+            val subscriptionStatus = userDoc.getString("subscriptionStatus") ?: "inactive"
+            val isSubscribed = subscriptionStatus == "active"
+
+            // Create appointment regardless of subscription status
+            val timeSlot = _selectedTimeSlot.value ?: throw Exception("No time slot selected")
+            val date = _selectedDate.value.ifEmpty { throw Exception("No date selected") }
+            val consultationMethod = _selectedConsultationMethod.value.ifEmpty { throw Exception("No consultation method selected") }
+
+            val appointmentData = mapOf(
+                "userId" to userId,
+                "psychologistId" to psychologistId,
+                "appointmentDate" to date,
+                "appointmentTime" to "${timeSlot.startTime}-${timeSlot.endTime}",
+                "status" to "scheduled",
+                "paymentStatus" to if (isSubscribed) "paid" else "pending",
+                "paymentMethod" to if (isSubscribed) "subscription" else "",
+                "consultationMethod" to consultationMethod,
+                "chatRoomId" to "",
+                "createdAt" to Timestamp.now(),
+                "updatedAt" to Timestamp.now()
+            )
+
+            val docRef = firestore.collection("appointments")
+                .add(appointmentData)
+                .await()
+
+            // Update time slot availability
+            repository.handlePostAppointmentCreation( // Panggil fungsi yang sudah diubah
+                psychologistId = psychologistId,
+                date = date,
+                timeSlot = timeSlot
+            )
+
+            _isLoading.value = false
+            onSuccess(docRef.id, !isSubscribed) // Return whether payment is needed
+
+        } catch (e: Exception) {
+            _isLoading.value = false
+            onError(e.message ?: "Failed to create appointment")
+        }
+    }
+
+
+
+
+    private suspend fun bookAppointmentWithSubscription(psychologistId: String): Resource<String> {
+        return try {
+            val userId = auth.currentUser?.uid ?: throw Exception("User not authenticated")
+            val timeSlot = _selectedTimeSlot.value ?: throw Exception("No time slot selected")
+            val date = _selectedDate.value.ifEmpty { throw Exception("No date selected") }
+            val consultationMethod = _selectedConsultationMethod.value.ifEmpty { throw Exception("No consultation method selected") }
+
+            val appointmentData = mapOf(
+                "userId" to userId,
+                "psychologistId" to psychologistId,
+                "appointmentDate" to date,
+                "appointmentTime" to "${timeSlot.startTime}-${timeSlot.endTime}",
+                "status" to "scheduled",
+                "paymentStatus" to "paid", // Set to paid for subscription users
+                "paymentMethod" to "subscription", // Set method to subscription
+                "consultationMethod" to consultationMethod,
+                "chatRoomId" to "",
+                "createdAt" to Timestamp.now(),
+                "updatedAt" to Timestamp.now()
+            )
+
+            val docRef = firestore.collection("appointments")
+                .add(appointmentData)
+                .await()
+
+            // Update time slot availability
+            repository.handlePostAppointmentCreation( // Panggil fungsi yang sudah diubah
+                psychologistId = psychologistId,
+                date = date,
+                timeSlot = timeSlot
+            )
+
+            _isLoading.value = false
+            Resource.Success(docRef.id)
+
+        } catch (e: Exception) {
+            _isLoading.value = false
+            Resource.Error(e.message ?: "Failed to book appointment")
+        }
+    }
+}

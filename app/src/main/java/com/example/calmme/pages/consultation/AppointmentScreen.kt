@@ -29,10 +29,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.calmme.R
 import com.example.calmme.commons.LocalNavController
+import com.example.calmme.commons.Routes
 import com.example.calmme.data.PsychologistData
 import com.example.calmme.data.Resource
 import com.example.calmme.data.ScheduleData
 import com.example.calmme.data.TimeSlot
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -112,23 +115,27 @@ fun AppointmentScreen(
                 onDatePickerClick = { showDatePicker = true },
                 onTimeSlotSelect = { appointmentViewModel.setSelectedTimeSlot(it) },
                 onMethodSelect = { appointmentViewModel.setConsultationMethod(it) },
+                // Di AppointmentScreen.kt - Modifikasi bagian onSubmitClick
+                // Di AppointmentScreen.kt - Modifikasi bagian onSubmitClick
+                // Di AppointmentScreen.kt - Menggunakan fungsi alternatif
                 onSubmitClick = {
                     if (selectedDate.isNotEmpty() && selectedTimeSlot != null && selectedMethod.isNotEmpty()) {
                         coroutineScope.launch {
-                            val result = appointmentViewModel.bookAppointment(
+                            appointmentViewModel.createAppointmentDirectly(
                                 psychologistId = psychologist!!.psychologistId,
-                                paymentMethod = "pending"
+                                onSuccess = { appointmentId, needsPayment ->
+                                    if (needsPayment) {
+                                        Toast.makeText(context, "Appointment created! Please complete payment to confirm.", Toast.LENGTH_LONG).show()
+                                        navController.navigate(Routes.Subscribe.route)
+                                    } else {
+                                        Toast.makeText(context, "Appointment booked successfully!", Toast.LENGTH_SHORT).show()
+                                        navController.popBackStack()
+                                    }
+                                },
+                                onError = { error ->
+                                    Toast.makeText(context, error, Toast.LENGTH_LONG).show()
+                                }
                             )
-                            when (result) {
-                                is Resource.Success -> {
-                                    Toast.makeText(context, "Appointment booked successfully!", Toast.LENGTH_SHORT).show()
-                                    navController.popBackStack()
-                                }
-                                is Resource.Error -> {
-                                    Toast.makeText(context, result.message, Toast.LENGTH_LONG).show()
-                                }
-                                else -> {}
-                            }
                         }
                     } else {
                         Toast.makeText(context, "Please select date, time, and consultation method", Toast.LENGTH_SHORT).show()

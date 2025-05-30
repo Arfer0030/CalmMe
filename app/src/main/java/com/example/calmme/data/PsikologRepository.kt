@@ -109,35 +109,20 @@ class PsikologRepository {
     }
 
     // Book appointment - TAMBAHAN BARU
-    suspend fun bookAppointment(
+    // Di PsikologRepository.kt
+    suspend fun handlePostAppointmentCreation( // Nama diubah agar lebih jelas
         psychologistId: String,
-        userId: String,
         date: String,
-        timeSlot: TimeSlot,
-        consultationMethod: String
-    ): Resource<String> {
+        timeSlot: TimeSlot
+        // Anda mungkin tidak butuh userId dan consultationMethod di sini lagi
+        // jika hanya untuk update ketersediaan slot
+    ): Resource<Unit> { // Mungkin tidak perlu return ID lagi
         return try {
-            val appointmentData = mapOf(
-                "psychologistId" to psychologistId,
-                "userId" to userId,
-                "date" to date,
-                "startTime" to timeSlot.startTime,
-                "endTime" to timeSlot.endTime,
-                "consultationMethod" to consultationMethod,
-                "status" to "scheduled",
-                "createdAt" to Timestamp.now()
-            )
-
-            val docRef = firestore.collection("appointments")
-                .add(appointmentData)
-                .await()
-
-            // Update time slot availability
+            // HANYA update time slot availability
             updateTimeSlotAvailability(psychologistId, date, timeSlot, false)
-
-            Resource.Success(docRef.id)
+            Resource.Success(Unit)
         } catch (e: Exception) {
-            Resource.Error(e.message ?: "Failed to book appointment")
+            Resource.Error(e.message ?: "Failed to update time slot availability")
         }
     }
 
