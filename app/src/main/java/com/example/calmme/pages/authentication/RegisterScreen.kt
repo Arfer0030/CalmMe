@@ -39,8 +39,11 @@ fun RegisterScreen(
 
     LaunchedEffect(authState) {
         when (authState) {
-            is AuthState.Authenticated -> navController.navigate(Routes.Home.route) {
-                popUpTo(Routes.Authentication.route) { inclusive = true }
+            is AuthState.EmailVerificationSent -> {
+                // Gunakan Routes.EmailVerification.createRoute()
+                navController.navigate(Routes.EmailVerification.createRoute(email)) {
+                    popUpTo(Routes.Authentication.route) { inclusive = false }
+                }
             }
             is AuthState.Error -> {
                 Toast.makeText(context, (authState as AuthState.Error).message, Toast.LENGTH_SHORT).show()

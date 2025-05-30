@@ -15,4 +15,11 @@ sealed class Routes(val route: String) {
     object InitAssesment : Routes("initassesment")
     object Subscribe : Routes("subscribe")
     object EditProfile : Routes("edit_profile")
+    object EmailVerification : Routes("email_verification/{email}") {
+        fun createRoute(email: String) = "email_verification/$email"
+    }
+    object EditSecurity : Routes("edit_security")
+    object Payment : Routes("payment")
+    object Confirmation : Routes("confirmation")
+
 }

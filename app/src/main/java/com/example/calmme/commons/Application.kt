@@ -27,6 +27,7 @@ import com.example.calmme.pages.assesment.AssesmentViewModel
 import com.example.calmme.pages.assesment.InitAssestScreen
 import com.example.calmme.pages.authentication.AuthScreen
 import com.example.calmme.pages.authentication.AuthViewModel
+import com.example.calmme.pages.authentication.EmailVerificationScreen
 import com.example.calmme.pages.consultation.AppointmentScreen
 import com.example.calmme.pages.consultation.ConsultationScreen
 import com.example.calmme.pages.consultation.ConsultationViewModel
@@ -39,6 +40,10 @@ import com.example.calmme.pages.meditate.MusicScreen
 import com.example.calmme.pages.profile.ProfileScreen
 import com.example.calmme.pages.subscribe.SubscribeScreen
 import com.example.calmme.pages.profile.EditProfileScreen
+import com.example.calmme.pages.profile.EditSecurityScreen
+import com.example.calmme.pages.subscribe.ConfirmationScreen
+import com.example.calmme.pages.subscribe.PaymentScreen
+import com.example.calmme.pages.subscribe.SubscribeViewModel
 
 
 data class NavigationItem(
@@ -53,6 +58,7 @@ fun Application(
     consultationViewModel: ConsultationViewModel,
     assesmentViewModel: AssesmentViewModel,
     dailyMoodViewModel: DailyMoodViewModel,
+    subscribeViewModel: SubscribeViewModel,
 ) {
     val navController = rememberNavController()
 
@@ -114,18 +120,16 @@ fun Application(
             ) {
                 composable(Routes.Authentication.route) { AuthScreen(authViewModel) }
                 composable(Routes.Home.route) { HomeScreen(authViewModel = authViewModel, dailyMoodViewModel = dailyMoodViewModel) }
-                composable(Routes.Consultation.route) {
-                    ConsultationScreen(consultationViewModel)
-                }
-                composable(Routes.Appointment.route) {
-                    AppointmentScreen(consultationViewModel)
-                }
+                composable(Routes.Consultation.route) { ConsultationScreen(consultationViewModel) }
+                composable(Routes.Appointment.route) { AppointmentScreen(consultationViewModel) }
                 composable(Routes.History.route) { HistoryScreen() }
-                composable(Routes.Profile.route) { ProfileScreen(authViewModel = authViewModel) }
+                composable(Routes.Profile.route) { ProfileScreen(authViewModel) }
                 composable(Routes.Assesment.route) { AssesmentScreen(assesmentViewModel) }
                 composable(Routes.InitAssesment.route) { InitAssestScreen() }
                 composable(Routes.DailyMood.route) { DailyMoodScreen(dailyMoodViewModel) }
-                composable(Routes.Subscribe.route) { SubscribeScreen() }
+                composable(Routes.Subscribe.route) { SubscribeScreen(subscribeViewModel) }
+                composable(Routes.Payment.route) { PaymentScreen(subscribeViewModel)}
+                composable(Routes.Confirmation.route) { ConfirmationScreen(subscribeViewModel) }
                 composable(Routes.Meditate.route) { MeditateScreen(navController) }
                 composable(
                     route = "music/{audioResId}",
@@ -134,7 +138,19 @@ fun Application(
                     val audioResId = backStackEntry.arguments?.getInt("audioResId") ?: 0
                     MusicScreen(navController, audioResId)
                 }
-                composable(Routes.EditProfile.route) {EditProfileScreen(authViewModel = authViewModel)}
+                composable(Routes.EditProfile.route) {EditProfileScreen(authViewModel)}
+                composable(Routes.EditSecurity.route) { EditSecurityScreen(authViewModel) }
+                // Perbaikan untuk EmailVerificationScreen
+                composable(
+                    route = "email_verification/{email}",
+                    arguments = listOf(navArgument("email") { type = NavType.StringType })
+                ) { backStackEntry ->
+                    val email = backStackEntry.arguments?.getString("email") ?: ""
+                    EmailVerificationScreen(
+                        authViewModel = authViewModel,
+                        email = email
+                    )
+                }
 
             }
         }
@@ -152,7 +168,14 @@ fun shouldShowBottomBar(): Boolean {
         Routes.Appointment.route,
         Routes.Assesment.route,
         Routes.InitAssesment.route,
-        Routes.DailyMood.route
+        Routes.DailyMood.route,
+        Routes.EditProfile.route,
+        Routes.Confirmation.route,
+        Routes.Payment.route,
+        Routes.Subscribe.route,
+        Routes.EditSecurity.route,
+        "email_verification/{email}"
     )
+
     return currentRoute != null && currentRoute !in noBottomBarScreens
 }
