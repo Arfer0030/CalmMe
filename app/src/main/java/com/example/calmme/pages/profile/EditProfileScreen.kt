@@ -37,6 +37,7 @@ fun EditProfileScreen(authViewModel: AuthViewModel) {
     var gender by remember { mutableStateOf("male") }
     var dateOfBirth by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
+    var userRole by remember { mutableStateOf("") }
 
     // Track original values untuk deteksi perubahan
     var originalUsername by remember { mutableStateOf("") }
@@ -51,6 +52,7 @@ fun EditProfileScreen(authViewModel: AuthViewModel) {
                 email = userData["email"] as? String ?: ""
                 gender = userData["gender"] as? String ?: "male"
                 dateOfBirth = userData["dateOfBirth"] as? String ?: ""
+                userRole = userData["role"] as? String ?: "user"
 
                 // Simpan nilai original
                 originalUsername = username
@@ -231,11 +233,30 @@ fun EditProfileScreen(authViewModel: AuthViewModel) {
                         modifier = Modifier.size(20.dp)
                     )
                 } else {
-                    Text("Save", fontFamily = nunito, color = Color.White)
+                    Text("Save", style = MaterialTheme.typography.titleLarge, color = Color.White)
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            if (userRole == "psychologist") {
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedButton(
+                    onClick = {
+                        navController.navigate("psi_edit_profile")
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, Color(0xFF8E44AD))
+                ) {
+                    Text(
+                        text = "Edit Psychologist Profile",
+                        color = Color(0xFF8E44AD),
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                }
+            }
         }
     }
 }

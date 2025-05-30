@@ -41,6 +41,7 @@ import com.example.calmme.pages.profile.ProfileScreen
 import com.example.calmme.pages.subscribe.SubscribeScreen
 import com.example.calmme.pages.profile.EditProfileScreen
 import com.example.calmme.pages.profile.EditSecurityScreen
+import com.example.calmme.pages.profile.PsiEditProfileScreen
 import com.example.calmme.pages.subscribe.ConfirmationScreen
 import com.example.calmme.pages.subscribe.PaymentScreen
 import com.example.calmme.pages.subscribe.SubscribeViewModel
@@ -56,7 +57,6 @@ data class NavigationItem(
 fun Application(
     authViewModel: AuthViewModel,
     consultationViewModel: ConsultationViewModel,
-    assesmentViewModel: AssesmentViewModel,
     dailyMoodViewModel: DailyMoodViewModel,
     subscribeViewModel: SubscribeViewModel,
 ) {
@@ -124,7 +124,7 @@ fun Application(
                 composable(Routes.Appointment.route) { AppointmentScreen(consultationViewModel) }
                 composable(Routes.History.route) { HistoryScreen() }
                 composable(Routes.Profile.route) { ProfileScreen(authViewModel) }
-                composable(Routes.Assesment.route) { AssesmentScreen(assesmentViewModel) }
+                composable(Routes.Assesment.route) { AssesmentScreen() }
                 composable(Routes.InitAssesment.route) { InitAssestScreen() }
                 composable(Routes.DailyMood.route) { DailyMoodScreen(dailyMoodViewModel) }
                 composable(Routes.Subscribe.route) { SubscribeScreen(subscribeViewModel) }
@@ -139,6 +139,7 @@ fun Application(
                     MusicScreen(navController, audioResId)
                 }
                 composable(Routes.EditProfile.route) {EditProfileScreen(authViewModel)}
+                composable(Routes.PsiEditProfile.route) { PsiEditProfileScreen() }
                 composable(Routes.EditSecurity.route) { EditSecurityScreen(authViewModel) }
                 // Perbaikan untuk EmailVerificationScreen
                 composable(

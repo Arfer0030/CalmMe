@@ -62,7 +62,11 @@ import java.util.Calendar
 
 // HomeScreen.kt
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier, authViewModel: AuthViewModel, dailyMoodViewModel: DailyMoodViewModel) {
+fun HomeScreen(
+    modifier: Modifier = Modifier,
+    authViewModel: AuthViewModel,
+    dailyMoodViewModel: DailyMoodViewModel
+) {
     val navController = LocalNavController.current
     val context = LocalContext.current
     val auth = FirebaseAuth.getInstance()

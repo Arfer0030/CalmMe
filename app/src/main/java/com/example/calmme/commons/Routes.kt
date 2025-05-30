@@ -2,6 +2,7 @@ package com.example.calmme.commons
 
 import kotlinx.serialization.Serializable
 
+@Serializable
 sealed class Routes(val route: String) {
     object Authentication : Routes("authentication")
     object Home : Routes("home")
@@ -21,5 +22,6 @@ sealed class Routes(val route: String) {
     object EditSecurity : Routes("edit_security")
     object Payment : Routes("payment")
     object Confirmation : Routes("confirmation")
+    object PsiEditProfile : Routes("psi_edit_profile")
 
 }

@@ -19,7 +19,6 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         val authViewModel : AuthViewModel by viewModels()
         val consultationViewModel : ConsultationViewModel by viewModels()
-        val assesmentViewModel : AssesmentViewModel by viewModels()
         val dailyMoodViewModel : DailyMoodViewModel by viewModels()
         val subscribeViewModel : SubscribeViewModel by viewModels()
         setContent {
@@ -27,7 +26,6 @@ class MainActivity : ComponentActivity() {
                 Application(
                     authViewModel = authViewModel,
                     consultationViewModel = consultationViewModel,
-                    assesmentViewModel = assesmentViewModel,
                     dailyMoodViewModel = dailyMoodViewModel,
                     subscribeViewModel = subscribeViewModel,
                 )

@@ -380,9 +380,6 @@ class AuthViewModel : ViewModel() {
                 return
             }
 
-            // Hapus pengecekan email availability karena fetchSignInMethodsForEmail deprecated
-            // Langsung lakukan re-authenticate dan update email
-
             // Re-authenticate user dengan current password
             val credential = EmailAuthProvider.getCredential(user.email!!, currentPassword)
 

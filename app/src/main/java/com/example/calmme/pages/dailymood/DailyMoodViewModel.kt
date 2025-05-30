@@ -19,6 +19,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class DailyMoodViewModel(application: Application) : AndroidViewModel(application) {
+    @SuppressLint("StaticFieldLeak")
     private val context = getApplication<Application>().applicationContext
     private val moodDataStore = MoodDataStore(context)
 

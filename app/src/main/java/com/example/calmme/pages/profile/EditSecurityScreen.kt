@@ -516,11 +516,6 @@ fun EmailVerificationDialog(
                     Text("Check Status", color = Color.White)
                 }
             }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("I'll Sign In Later")
-            }
         }
     )
 }
