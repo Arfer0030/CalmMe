@@ -8,14 +8,9 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.channels.awaitClose
+import com.example.calmme.commons.Resource
 import java.text.SimpleDateFormat
 import java.util.*
-
-sealed class Resource<T> {
-    data class Loading<T>(val isLoading: Boolean = true) : Resource<T>()
-    data class Success<T>(val data: T) : Resource<T>()
-    data class Error<T>(val message: String) : Resource<T>()
-}
 
 class PsikologRepository {
     private val auth = FirebaseAuth.getInstance()

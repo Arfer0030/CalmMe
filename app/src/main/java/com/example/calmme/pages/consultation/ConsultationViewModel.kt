@@ -3,7 +3,7 @@ package com.example.calmme.pages.consultation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.calmme.data.PsikologRepository
-import com.example.calmme.data.Resource
+import com.example.calmme.commons.Resource
 import com.example.calmme.data.PsychologistData
 import com.example.calmme.data.TimeSlot
 import com.google.firebase.auth.FirebaseAuth

@@ -24,4 +24,9 @@ sealed class Routes(val route: String) {
     object Confirmation : Routes("confirmation")
     object PsiEditProfile : Routes("psi_edit_profile")
 
+    // ✅ Sederhanakan Chat route
+    object Chat : Routes("chat/{chatRoomId}") {
+        fun createRoute(chatRoomId: String) = "chat/$chatRoomId"
+    }
 }
+

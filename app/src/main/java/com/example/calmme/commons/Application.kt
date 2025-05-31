@@ -28,6 +28,7 @@ import com.example.calmme.pages.assesment.InitAssestScreen
 import com.example.calmme.pages.authentication.AuthScreen
 import com.example.calmme.pages.authentication.AuthViewModel
 import com.example.calmme.pages.authentication.EmailVerificationScreen
+import com.example.calmme.pages.chat.ChatScreen
 import com.example.calmme.pages.consultation.AppointmentScreen
 import com.example.calmme.pages.consultation.ConsultationScreen
 import com.example.calmme.pages.consultation.ConsultationViewModel
@@ -152,6 +153,14 @@ fun Application(
                         email = email
                     )
                 }
+                // Di Application.kt - Lebih sederhana
+                composable(
+                    route = "chat/{chatRoomId}",
+                    arguments = listOf(navArgument("chatRoomId") { type = NavType.StringType })
+                ) { backStackEntry ->
+                    val chatRoomId = backStackEntry.arguments?.getString("chatRoomId") ?: ""
+                    ChatScreen(chatRoomId = chatRoomId)
+                }
 
             }
         }
@@ -175,7 +184,9 @@ fun shouldShowBottomBar(): Boolean {
         Routes.Payment.route,
         Routes.Subscribe.route,
         Routes.EditSecurity.route,
-        "email_verification/{email}"
+        "email_verification/{email}",
+        Routes.Chat.route,
+        Routes.PsiEditProfile.route,
     )
 
     return currentRoute != null && currentRoute !in noBottomBarScreens

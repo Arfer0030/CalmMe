@@ -31,7 +31,7 @@ import com.example.calmme.R
 import com.example.calmme.commons.LocalNavController
 import com.example.calmme.commons.Routes
 import com.example.calmme.data.PsychologistData
-import com.example.calmme.data.Resource
+import com.example.calmme.commons.Resource
 import com.example.calmme.data.ScheduleData
 import com.example.calmme.data.TimeSlot
 import com.google.firebase.auth.FirebaseAuth

@@ -6,7 +6,7 @@ import com.example.calmme.data.PsychologistData
 import com.example.calmme.data.ScheduleData
 import com.example.calmme.data.TimeSlot
 import com.example.calmme.data.PsikologRepository
-import com.example.calmme.data.Resource
+import com.example.calmme.commons.Resource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
