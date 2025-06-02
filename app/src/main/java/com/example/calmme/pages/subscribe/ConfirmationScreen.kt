@@ -3,11 +3,32 @@ package com.example.calmme.pages.subscribe
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -21,18 +42,15 @@ import androidx.compose.ui.unit.sp
 import com.example.calmme.R
 import com.example.calmme.commons.LocalNavController
 import com.example.calmme.commons.Routes
-import kotlinx.coroutines.launch
 
 @Composable
 fun ConfirmationScreen(viewModel: SubscribeViewModel) {
     val navController = LocalNavController.current
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
     val isLoading by viewModel.isLoading.collectAsState()
     var paymentProcessed by remember { mutableStateOf(false) }
     var showSuccessUI by remember { mutableStateOf(false) }
 
-    // LaunchedEffect untuk finalize payment saat screen muncul
     LaunchedEffect(Unit) {
         if (!paymentProcessed) {
             viewModel.finalizePayment(
@@ -60,7 +78,6 @@ fun ConfirmationScreen(viewModel: SubscribeViewModel) {
             .padding(24.dp)
     ) {
         if (isLoading && !showSuccessUI) {
-            // Loading UI
             Column(
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -78,12 +95,10 @@ fun ConfirmationScreen(viewModel: SubscribeViewModel) {
                 )
             }
         } else if (showSuccessUI) {
-            // Success UI (existing code)
             Column(
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Header
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -113,12 +128,10 @@ fun ConfirmationScreen(viewModel: SubscribeViewModel) {
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Progress Indicator
                 ProgressIndicator(currentStep = 3, totalSteps = 3)
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Title
                 Text(
                     text = "Confirmation",
                     fontSize = 24.sp,
@@ -129,7 +142,6 @@ fun ConfirmationScreen(viewModel: SubscribeViewModel) {
 
                 Spacer(modifier = Modifier.height(48.dp))
 
-                // Success Icon
                 Box(
                     modifier = Modifier
                         .size(120.dp)
@@ -149,7 +161,6 @@ fun ConfirmationScreen(viewModel: SubscribeViewModel) {
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Success Text
                 Text(
                     text = "Successful!",
                     fontSize = 28.sp,
@@ -168,11 +179,9 @@ fun ConfirmationScreen(viewModel: SubscribeViewModel) {
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                // Buttons
                 Column(
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    // View Order Button
                     OutlinedButton(
                         onClick = {
                             navController.navigate(Routes.History.route) {
@@ -200,7 +209,6 @@ fun ConfirmationScreen(viewModel: SubscribeViewModel) {
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Get Started Button
                     Button(
                         onClick = {
                             navController.navigate(Routes.Consultation.route) {

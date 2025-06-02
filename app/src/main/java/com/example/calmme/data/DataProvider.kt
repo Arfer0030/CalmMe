@@ -34,7 +34,6 @@ data class ScheduleData(
     val createdAt: Timestamp? = null
 )
 
-// ChatMessage.kt
 data class ChatMessage(
     val messageId: String = "",
     val chatRoomId: String = "",
@@ -45,12 +44,10 @@ data class ChatMessage(
     val senderName: String = ""
 )
 
-// ChatRoom.kt
-// Di ChatRoom.kt - Sesuaikan dengan struktur Firestore
 data class ChatRoom(
     val chatRoomId: String = "",
     val appointmentId: String = "",
-    val userId: List<String> = emptyList(), // ✅ Ubah dari participantIds ke userId
+    val userId: List<String> = emptyList(),
     val psychologistId: String = "",
     val lastMessageText: String? = null,
     val lastMessageTimestamp: Timestamp? = null,
@@ -60,12 +57,22 @@ data class ChatRoom(
     val isActive: Boolean = false,
     val startTime: String = "",
     val endTime: String = ""
-) {
-    // ✅ Tambahkan property untuk backward compatibility
-    val participantIds: List<String>
-        get() = userId
-}
+)
 
+data class AppointmentData(
+    val appointmentId: String = "",
+    val userId: String = "",
+    val psychologistId: String = "",
+    val appointmentDate: String = "",
+    val appointmentTime: String = "",
+    val status: String = "scheduled",
+    val paymentStatus: String = "pending",
+    val paymentMethod: String = "",
+    val consultationMethod: String = "",
+    val chatRoomId: String = "",
+    val createdAt: Timestamp? = null,
+    val updatedAt: Timestamp? = null
+)
 
 
 val Questions = listOf(

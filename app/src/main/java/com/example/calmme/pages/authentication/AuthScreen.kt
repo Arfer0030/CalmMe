@@ -71,7 +71,7 @@ fun AuthScreen(authViewModel: AuthViewModel) {
                 isLogin = isLogin,
                 onTabSelected = { isLogin = it }
             )
-
+            // Kalo login ke tab loginscreen dan sbealiknya
             if (isLogin) {
                 LoginScreen(onSwitchToRegister = { isLogin = false }, authViewModel = authViewModel)
             } else {
@@ -81,6 +81,7 @@ fun AuthScreen(authViewModel: AuthViewModel) {
     }
 }
 
+// Bagian tab switcher
 @Composable
 fun AuthTabSwitcher(isLogin: Boolean, onTabSelected: (Boolean) -> Unit) {
     Row(
@@ -117,9 +118,9 @@ fun AuthTabSwitcher(isLogin: Boolean, onTabSelected: (Boolean) -> Unit) {
     }
 }
 
+// Buat bikin button login dan register
 @Composable
 fun AuthButton(text: String, route: String, authViewModel: AuthViewModel, onClick: () -> Unit) {
-    val navController = LocalNavController.current
     val authState = authViewModel.authState.observeAsState()
 
     Button(
@@ -135,7 +136,7 @@ fun AuthButton(text: String, route: String, authViewModel: AuthViewModel, onClic
     }
 }
 
-
+// buat bikin input textfield
 @Composable
 fun AuthTextField(
     value: String,
@@ -180,7 +181,7 @@ fun AuthTextField(
     Spacer(modifier = Modifier.height(8.dp))
 }
 
-
+// Buat teks dan teksbutton bagian bawah screen
 @Composable
 fun AuthBottomText(text: String, textbutton:String, onTabSwitch: () -> Unit){
     Row(

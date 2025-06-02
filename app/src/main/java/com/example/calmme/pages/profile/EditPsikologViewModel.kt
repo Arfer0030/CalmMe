@@ -10,9 +10,8 @@ import com.example.calmme.commons.Resource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-class EditPsikologViewModel @Inject constructor(
+class EditPsikologViewModel (
     private val repository: PsikologRepository = PsikologRepository()
 ) : ViewModel() {
 
@@ -26,7 +25,6 @@ class EditPsikologViewModel @Inject constructor(
     val isLoading: StateFlow<Boolean> = _isLoading
 
     private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> = _errorMessage
 
     init {
         loadPsychologistData()
@@ -44,7 +42,6 @@ class EditPsikologViewModel @Inject constructor(
                         _isLoading.value = false
                         _psychologistData.value = resource.data ?: PsychologistData()
 
-                        // Load schedules if psychologist data exists
                         resource.data?.let { psychologist ->
                             if (psychologist.psychologistId.isNotEmpty()) {
                                 loadSchedules(psychologist.psychologistId)
@@ -67,7 +64,7 @@ class EditPsikologViewModel @Inject constructor(
             repository.getSchedules(psychologistId).collect { resource ->
                 when (resource) {
                     is Resource.Loading -> {
-                        // Loading handled by main loading state
+
                     }
                     is Resource.Success -> {
                         _schedules.value = resource.data
@@ -108,7 +105,7 @@ class EditPsikologViewModel @Inject constructor(
                     onError(result.message)
                 }
                 is Resource.Loading -> {
-                    // Already handled above
+
                 }
             }
         }
@@ -125,7 +122,7 @@ class EditPsikologViewModel @Inject constructor(
 
             when (val result = repository.updateSchedule(psychologistId, dayOfWeek, timeSlots)) {
                 is Resource.Success -> {
-                    loadSchedules() // Reload schedules
+                    loadSchedules()
                     onSuccess()
                 }
                 is Resource.Error -> {
@@ -133,13 +130,9 @@ class EditPsikologViewModel @Inject constructor(
                     onError(result.message)
                 }
                 is Resource.Loading -> {
-                    // Loading state
+
                 }
             }
         }
-    }
-
-    fun clearError() {
-        _errorMessage.value = null
     }
 }

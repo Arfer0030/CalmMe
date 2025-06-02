@@ -59,7 +59,6 @@ class ChatViewModel(
         }
     }
 
-
     private fun loadMessages() {
         viewModelScope.launch {
             chatRepository.getChatMessages(chatRoomId).collect { result ->
@@ -85,20 +84,18 @@ class ChatViewModel(
                 Log.d("ChatViewModel", "UserId array: ${chatRoom.userId}")
                 Log.d("ChatViewModel", "Current user: $currentUserId")
 
-                // ✅ PERBAIKAN: Gunakan userId field yang sesuai dengan Firestore
                 if (chatRoom.userId.isEmpty()) {
                     Log.e("ChatViewModel", "No participants in chat room")
                     return@launch
                 }
 
-                // ✅ PERBAIKAN: Gunakan userId field
                 val receiverId = chatRoom.userId.firstOrNull { it != currentUserId }
                 if (receiverId == null) {
                     Log.e("ChatViewModel", "No receiver found in participants")
                     return@launch
                 }
 
-                // ✅ PERBAIKAN: Safe access untuk senderName
+                // Safe access senderName
                 val senderName = when {
                     chatRoom.userId.size >= 2 && currentUserId == chatRoom.userId[0] -> chatRoom.userName
                     chatRoom.userId.size >= 2 && currentUserId == chatRoom.userId[1] -> chatRoom.psychologistName

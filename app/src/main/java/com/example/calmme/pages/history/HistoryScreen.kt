@@ -1,22 +1,40 @@
 package com.example.calmme.pages.history
 
-import android.util.Log
 import android.widget.Toast
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -25,17 +43,18 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.calmme.R
 import com.example.calmme.commons.LocalNavController
 import com.example.calmme.commons.Routes
-import androidx.compose.ui.platform.LocalContext
+import com.example.calmme.data.AppointmentData
 
 @Composable
 fun HistoryScreen(
     historyViewModel: HistoryViewModel = viewModel()
 ) {
     val navController = LocalNavController.current
-    val appointments by historyViewModel.appointments.collectAsState()
     val context = LocalContext.current
+    val appointments by historyViewModel.appointments.collectAsState()
     val isLoading by historyViewModel.isLoading.collectAsState()
-    val userRole by historyViewModel.userRole.collectAsState()
+    val participantNames by historyViewModel.participantNames.collectAsState()
+    val participantEmails by historyViewModel.participantEmails.collectAsState()
 
     Box(
         modifier = Modifier
@@ -49,9 +68,8 @@ fun HistoryScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(24.dp)
         ) {
-            // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -67,7 +85,6 @@ fun HistoryScreen(
                 Text(
                     text = "My Appointment",
                     style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
                 )
                 Icon(
                     painter = painterResource(id = R.drawable.profile),
@@ -92,32 +109,28 @@ fun HistoryScreen(
                     items(appointments) { appointment ->
                         AppointmentCard(
                             appointment = appointment,
-                            userRole = userRole,
-                            // Di HistoryScreen, update onChatClick
-                            // Di HistoryScreen, simplify onChatClick
+                            participantName = participantNames[appointment.appointmentId] ?: "",
+                            participantEmail = participantEmails[appointment.appointmentId] ?: "",
                             onChatClick = { appointmentId, chatRoomId ->
-                                Log.d("HistoryScreen", "Chat clicked - appointmentId: $appointmentId, chatRoomId: $chatRoomId")
-                                if (chatRoomId != null && chatRoomId.isNotEmpty()) {
-                                    // Langsung navigate dengan chatRoomId yang sudah ada
-                                    try {
-                                        navController.navigate(Routes.Chat.createRoute(chatRoomId))
-                                    } catch (e: Exception) {
-                                        Toast.makeText(context, "Navigation failed: ${e.message}", Toast.LENGTH_SHORT).show()
-                                    }
+                                if (!chatRoomId.isNullOrEmpty()) {
+                                    navController.navigate(Routes.Chat.createRoute(chatRoomId))
                                 } else {
-                                    Log.d("HistoryScreen", "Creating new chat room for appointment: $appointmentId")
-                                    // Buat chat room dulu, kemudian navigate
                                     historyViewModel.createChatRoom(
                                         appointmentId = appointmentId,
+                                        psychologistId = appointment.psychologistId,
                                         onSuccess = { newChatRoomId ->
-                                            try {
-                                                navController.navigate(Routes.Chat.createRoute(newChatRoomId))
-                                            } catch (e: Exception) {
-                                                Toast.makeText(context, "Navigation failed: ${e.message}", Toast.LENGTH_SHORT).show()
-                                            }
+                                            navController.navigate(
+                                                Routes.Chat.createRoute(
+                                                    newChatRoomId
+                                                )
+                                            )
                                         },
                                         onError = { error ->
-                                            Toast.makeText(context, "Failed to create chat: $error", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(
+                                                context,
+                                                "Failed to create chat: $error",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
                                         }
                                     )
                                 }
@@ -132,8 +145,9 @@ fun HistoryScreen(
 
 @Composable
 fun AppointmentCard(
-    appointment: AppointmentHistory,
-    userRole: String,
+    appointment: AppointmentData,
+    participantName: String,
+    participantEmail: String,
     onChatClick: (String, String?) -> Unit
 ) {
     Card(
@@ -164,9 +178,9 @@ fun AppointmentCard(
                 modifier = Modifier.padding(16.dp)
             ) {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
                 ) {
-                    // Profile Image
                     Box(
                         modifier = Modifier
                             .size(40.dp)
@@ -178,7 +192,6 @@ fun AppointmentCard(
                             painter = painterResource(id = R.drawable.profile),
                             contentDescription = "Profile",
                             modifier = Modifier.size(24.dp),
-                            tint = Color.Black
                         )
                     }
 
@@ -186,12 +199,12 @@ fun AppointmentCard(
 
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = if (userRole == "psychologist") "Patient" else appointment.psychologistName,
+                            text = participantName,
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp
                         )
                         Text(
-                            text = appointment.psychologistEmail,
+                            text = participantEmail,
                             fontSize = 14.sp,
                             color = Color.Gray
                         )
@@ -222,7 +235,6 @@ fun AppointmentCard(
                             painter = painterResource(id = R.drawable.ic_clock),
                             contentDescription = "Time",
                             modifier = Modifier.size(16.dp),
-
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
@@ -236,7 +248,6 @@ fun AppointmentCard(
                             painter = painterResource(id = R.drawable.ic_chat),
                             contentDescription = "Method",
                             modifier = Modifier.size(16.dp),
-
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
@@ -248,10 +259,14 @@ fun AppointmentCard(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Chat Button - hanya muncul jika paymentStatus = "paid"
                 if (appointment.paymentStatus == "paid") {
                     Button(
-                        onClick = { onChatClick(appointment.appointmentId, appointment.chatRoomId) },
+                        onClick = {
+                            onChatClick(
+                                appointment.appointmentId,
+                                appointment.chatRoomId
+                            )
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF8E44AD)
@@ -265,7 +280,6 @@ fun AppointmentCard(
                         )
                     }
                 } else {
-                    // Status indicator untuk unpaid appointments
                     Text(
                         text = "Payment Status: ${appointment.paymentStatus}",
                         fontSize = 12.sp,

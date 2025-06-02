@@ -16,11 +16,10 @@ class PsikologRepository {
     private val auth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
 
-    // Get all psychologists for consultation
+    // Ambil semua data psikolog buat consultation
     fun getAllPsychologists(): Flow<Resource<List<PsychologistData>>> = flow {
         try {
             emit(Resource.Loading())
-
             val querySnapshot = firestore.collection("psychologists")
                 .whereEqualTo("isAvailable", true)
                 .get()
@@ -31,56 +30,24 @@ class PsikologRepository {
                     psychologistId = document.id
                 )
             }
-
             emit(Resource.Success(psychologists))
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Failed to load psychologists"))
         }
     }
 
-    // Get psychologist by ID - TAMBAHAN BARU
-    fun getPsychologistById(psychologistId: String): Flow<Resource<PsychologistData?>> = flow {
-        try {
-            emit(Resource.Loading())
-
-            if (psychologistId.isEmpty()) {
-                emit(Resource.Error("Psychologist ID is empty"))
-                return@flow
-            }
-
-            val document = firestore.collection("psychologists")
-                .document(psychologistId)
-                .get()
-                .await()
-
-            val psychologist = if (document.exists()) {
-                document.toObject(PsychologistData::class.java)?.copy(
-                    psychologistId = document.id
-                )
-            } else {
-                null
-            }
-
-            emit(Resource.Success(psychologist))
-        } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "Failed to load psychologist"))
-        }
-    }
-
-    // Get available time slots for psychologist - TAMBAHAN BARU
+    // Ambil waktu konsul yang tersedia buat booking
     fun getAvailableTimeSlots(
         psychologistId: String,
         date: String
     ): Flow<Resource<List<TimeSlot>>> = flow {
         try {
             emit(Resource.Loading())
-
             if (psychologistId.isEmpty()) {
                 emit(Resource.Error("Psychologist ID is empty"))
                 return@flow
             }
 
-            // Get day of week from date
             val dayOfWeek = getDayOfWeekFromDate(date)
 
             val querySnapshot = firestore.collection("schedules")
@@ -96,24 +63,19 @@ class PsikologRepository {
             } else {
                 emptyList()
             }
-
             emit(Resource.Success(timeSlots))
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Failed to load time slots"))
         }
     }
 
-    // Book appointment - TAMBAHAN BARU
-    // Di PsikologRepository.kt
-    suspend fun handlePostAppointmentCreation( // Nama diubah agar lebih jelas
+    // Buat handle ketersediaan waktu konsul
+    suspend fun handlePostAppointmentCreation(
         psychologistId: String,
         date: String,
         timeSlot: TimeSlot
-        // Anda mungkin tidak butuh userId dan consultationMethod di sini lagi
-        // jika hanya untuk update ketersediaan slot
-    ): Resource<Unit> { // Mungkin tidak perlu return ID lagi
+    ): Resource<Unit> {
         return try {
-            // HANYA update time slot availability
             updateTimeSlotAvailability(psychologistId, date, timeSlot, false)
             Resource.Success(Unit)
         } catch (e: Exception) {
@@ -121,7 +83,7 @@ class PsikologRepository {
         }
     }
 
-    // Helper function untuk update availability time slot
+    // Buat update ketersediaan waktu konsul
     private suspend fun updateTimeSlotAvailability(
         psychologistId: String,
         date: String,
@@ -148,7 +110,6 @@ class PsikologRepository {
                         slot
                     }
                 } ?: emptyList()
-
                 firestore.collection("schedules")
                     .document(document.id)
                     .update("timeSlots", updatedTimeSlots.map { slot ->
@@ -165,7 +126,7 @@ class PsikologRepository {
         }
     }
 
-    // Helper function untuk convert date ke day of week
+    // Fungsi buat convert tanggal ke hari
     private fun getDayOfWeekFromDate(date: String): String {
         return try {
             val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
@@ -184,15 +145,14 @@ class PsikologRepository {
                 else -> "monday"
             }
         } catch (e: Exception) {
-            "monday" // Default fallback
+            "monday"
         }
     }
 
-    // Get current user's psychologist data
+    // Fungsi buat ambil data psikolog saat ini
     fun getCurrentPsychologistData(): Flow<Resource<PsychologistData?>> = flow {
         try {
             emit(Resource.Loading())
-
             val userId = auth.currentUser?.uid ?: throw Exception("User not authenticated")
 
             val querySnapshot = firestore.collection("psychologists")
@@ -208,23 +168,20 @@ class PsikologRepository {
             } else {
                 null
             }
-
             emit(Resource.Success(psychologist))
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Failed to load psychologist data"))
         }
     }
 
-    // Get schedules for a psychologist
+    // Fungsi buat ambil schedule dari psikolog
     fun getSchedules(psychologistId: String): Flow<Resource<List<ScheduleData>>> = flow {
         try {
             emit(Resource.Loading())
-
             if (psychologistId.isEmpty()) {
                 emit(Resource.Error("Psychologist ID is empty"))
                 return@flow
             }
-
             val querySnapshot = firestore.collection("schedules")
                 .whereEqualTo("psychologistId", psychologistId)
                 .get()
@@ -235,17 +192,15 @@ class PsikologRepository {
                     scheduleId = document.id
                 )
             }
-
             emit(Resource.Success(schedules))
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Failed to load schedules"))
         }
     }
 
-    // Real-time listener for psychologists (for consultation screen)
+    // Realtime litener buat update psikolog
     fun getPsychologistsRealtime(): Flow<Resource<List<PsychologistData>>> = callbackFlow {
         trySend(Resource.Loading())
-
         val listener = firestore.collection("psychologists")
             .whereEqualTo("isAvailable", true)
             .addSnapshotListener { snapshot, error ->
@@ -259,14 +214,12 @@ class PsikologRepository {
                         psychologistId = document.id
                     )
                 } ?: emptyList()
-
                 trySend(Resource.Success(psychologists))
             }
-
         awaitClose { listener.remove() }
     }
 
-    // Update psychologist data
+    // Update data psikolog
     suspend fun updatePsychologistData(
         name: String,
         specialization: List<String>,
@@ -277,8 +230,7 @@ class PsikologRepository {
     ): Resource<PsychologistData> {
         return try {
             val userId = auth.currentUser?.uid ?: throw Exception("User not authenticated")
-
-            // Get current psychologist data
+            // Ambil data psikolog saat ini
             val currentPsychologist = getCurrentPsychologistData().let { flow ->
                 var result: PsychologistData? = null
                 flow.collect { resource ->
@@ -300,7 +252,7 @@ class PsikologRepository {
             )
 
             val updatedPsychologist = if (currentPsychologist?.psychologistId?.isEmpty() != false) {
-                // Create new psychologist document
+                // Buat dokumen baru
                 val newData = updateData + mapOf(
                     "userId" to userId,
                     "isAvailable" to true,
@@ -320,7 +272,7 @@ class PsikologRepository {
                     isAvailable = true
                 )
             } else {
-                // Update existing document
+                // Uodate dokumen yang ada
                 firestore.collection("psychologists")
                     .document(currentPsychologist.psychologistId)
                     .update(updateData)
@@ -353,7 +305,7 @@ class PsikologRepository {
                 return Resource.Error("Psychologist data not found")
             }
 
-            // Check if schedule exists for this day
+            // Check schedule ada atau belom
             val existingScheduleSnapshot = firestore.collection("schedules")
                 .whereEqualTo("psychologistId", psychologistId)
                 .whereEqualTo("dayOfWeek", dayOfWeek)
@@ -373,20 +325,18 @@ class PsikologRepository {
                 "isRecurring" to true,
                 "updatedAt" to Timestamp.now()
             )
-
             if (!existingScheduleSnapshot.isEmpty) {
-                // Update existing schedule
+                // Update shceule yang sudah ada
                 val existingDoc = existingScheduleSnapshot.documents.first()
                 firestore.collection("schedules")
                     .document(existingDoc.id)
                     .update(scheduleData)
                     .await()
             } else {
-                // Create new schedule
+                // Buat schedule baru
                 val newData = scheduleData + mapOf("createdAt" to Timestamp.now())
                 firestore.collection("schedules").add(newData).await()
             }
-
             Resource.Success(Unit)
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Failed to update schedule")

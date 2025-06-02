@@ -13,7 +13,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -26,20 +25,16 @@ import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
 import java.util.Locale
 import kotlinx.coroutines.launch
+import java.util.Date
 
 @Composable
 fun ChatScreen(
     chatRoomId: String,
-    appointmentId: String? = null,
-    psychologistId: String? = null,
     chatViewModel: ChatViewModel = viewModel()
 ) {
     val navController = LocalNavController.current
-    val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-
     val messages by chatViewModel.messages.collectAsState()
-    val isLoading by chatViewModel.isLoading.collectAsState()
     val chatRoom by chatViewModel.chatRoom.collectAsState()
     val currentUserId by chatViewModel.currentUserId.collectAsState()
 
@@ -51,7 +46,7 @@ fun ChatScreen(
         chatViewModel.initializeChatWithRoomId(chatRoomId)
     }
 
-    // Auto scroll to bottom when new message arrives
+    // Auto scroll ke bawah ketika ada pesan baru
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
             coroutineScope.launch {
@@ -105,11 +100,10 @@ fun ChatScreen(
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // Di ChatScreen.kt - Perbaiki display name
+                // Display nama
                 Column {
                     Text(
                         text = chatRoom?.let { room ->
-                            // ✅ Gunakan userId field yang benar
                             if (currentUserId == room.userId.firstOrNull()) {
                                 room.psychologistName
                             } else {
@@ -125,15 +119,6 @@ fun ChatScreen(
                         color = Color.Gray
                     )
                 }
-
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_search),
-                    contentDescription = "More",
-                    modifier = Modifier.size(24.dp)
-                )
             }
         }
 
@@ -145,7 +130,7 @@ fun ChatScreen(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "Today, 16/05/25",
+                text = getCurrentDateFormatted(),
                 fontSize = 12.sp,
                 color = Color.Gray,
                 modifier = Modifier
@@ -235,7 +220,7 @@ fun ChatItem(
         horizontalArrangement = if (isCurrentUser) Arrangement.End else Arrangement.Start
     ) {
         if (!isCurrentUser) {
-            // Avatar for other user
+            // profile psikolog
             Box(
                 modifier = Modifier
                     .size(32.dp)
@@ -285,7 +270,7 @@ fun ChatItem(
                 modifier = Modifier.padding(top = 2.dp, start = 4.dp, end = 4.dp)
             )
 
-            // Checkmark for sent messages
+            // Checkmark buat pesan yang dikirim
             if (isCurrentUser) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_check),
@@ -303,5 +288,10 @@ fun ChatItem(
 private fun formatTimestamp(timestamp: Timestamp): String {
     val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
     return sdf.format(timestamp.toDate())
+}
+
+private fun getCurrentDateFormatted(): String {
+    val sdf = SimpleDateFormat("EEEE, dd/MM/yy", Locale.getDefault())
+    return sdf.format(Date())
 }
 

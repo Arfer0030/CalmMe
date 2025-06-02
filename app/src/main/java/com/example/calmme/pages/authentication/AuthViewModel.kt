@@ -3,12 +3,10 @@ package com.example.calmme.pages.authentication
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.EmailAuthProvider
-import kotlinx.coroutines.launch
 
 class AuthViewModel : ViewModel() {
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
@@ -38,19 +36,6 @@ class AuthViewModel : ViewModel() {
     override fun onCleared() {
         super.onCleared()
         auth.removeAuthStateListener(authStateListener)
-    }
-
-    fun checkAuthStatus() {
-        val user = auth.currentUser
-        if (user == null) {
-            _authState.value = AuthState.Unauthenticated
-        } else {
-            if (user.isEmailVerified) {
-                _authState.value = AuthState.Authenticated
-            } else {
-                _authState.value = AuthState.EmailNotVerified
-            }
-        }
     }
 
     // Login dengan email atau username
@@ -107,20 +92,18 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    // Di AuthViewModel, tambahkan fungsi ini
+    // cek dan update email saat login ketika kasus changeemail
     fun checkAndUpdateEmailOnLogin(onComplete: () -> Unit) {
         val user = auth.currentUser
         if (user != null) {
             val currentEmail = user.email
             if (currentEmail != null) {
-                // Cek apakah email di Firestore berbeda dengan email di Auth
                 firestore.collection("users").document(user.uid)
                     .get()
                     .addOnSuccessListener { document ->
                         if (document.exists()) {
                             val firestoreEmail = document.getString("email")
                             if (firestoreEmail != currentEmail) {
-                                // Update email di Firestore
                                 updateEmailInFirestore(
                                     userId = user.uid,
                                     newEmail = currentEmail,
@@ -150,7 +133,7 @@ class AuthViewModel : ViewModel() {
     fun signup(username: String, email: String, password: String) {
         _authState.value = AuthState.Loading
 
-        // Cek apakah username sudah ada
+        // Cek username
         firestore.collection("users")
             .whereEqualTo("username", username)
             .get()
@@ -161,39 +144,36 @@ class AuthViewModel : ViewModel() {
                         .addOnCompleteListener { task ->
                             if (task.isSuccessful) {
                                 val user = auth.currentUser
-                                if (user != null) {
-                                    // Kirim email verifikasi
-                                    user.sendEmailVerification()
-                                        .addOnCompleteListener { verificationTask ->
-                                            if (verificationTask.isSuccessful) {
-                                                // Simpan data user di Firestore
-                                                val userId = user.uid
-                                                val userMap = hashMapOf(
-                                                    "username" to username,
-                                                    "email" to email,
-                                                    "gender" to "",
-                                                    "dateOfBirth" to "",
-                                                    "role" to "user",
-                                                    "subscriptionStatus" to "inactive",
-                                                    "subscriptionStartDate" to "",
-                                                    "subscriptionEndDate" to "",
-                                                    "emailVerified" to false,
-                                                    "createdAt" to Timestamp.now(),
-                                                    "updatedAt" to Timestamp.now()
-                                                )
+                                user?.sendEmailVerification()
+                                    ?.addOnCompleteListener { verificationTask ->
+                                        if (verificationTask.isSuccessful) {
+                                            // Simpan data user di Firestore
+                                            val userId = user.uid
+                                            val userMap = hashMapOf(
+                                                "username" to username,
+                                                "email" to email,
+                                                "gender" to "",
+                                                "dateOfBirth" to "",
+                                                "role" to "user",
+                                                "subscriptionStatus" to "inactive",
+                                                "subscriptionStartDate" to "",
+                                                "subscriptionEndDate" to "",
+                                                "emailVerified" to false,
+                                                "createdAt" to Timestamp.now(),
+                                                "updatedAt" to Timestamp.now()
+                                            )
 
-                                                firestore.collection("users").document(userId).set(userMap)
-                                                    .addOnSuccessListener {
-                                                        _authState.value = AuthState.EmailVerificationSent
-                                                    }
-                                                    .addOnFailureListener { e ->
-                                                        _authState.value = AuthState.Error(e.message ?: "Failed to save user data")
-                                                    }
-                                            } else {
-                                                _authState.value = AuthState.Error("Failed to send verification email")
-                                            }
+                                            firestore.collection("users").document(userId).set(userMap)
+                                                .addOnSuccessListener {
+                                                    _authState.value = AuthState.EmailVerificationSent
+                                                }
+                                                .addOnFailureListener { e ->
+                                                    _authState.value = AuthState.Error(e.message ?: "Failed to save user data")
+                                                }
+                                        } else {
+                                            _authState.value = AuthState.Error("Failed to send verification email")
                                         }
-                                }
+                                    }
                             } else {
                                 _authState.value = AuthState.Error(task.exception?.message ?: "Something went wrong")
                             }
@@ -207,7 +187,7 @@ class AuthViewModel : ViewModel() {
             }
     }
 
-    // Resend verification email
+    // Buat resend verification email
     fun resendVerificationEmail(onSuccess: () -> Unit, onError: (String) -> Unit) {
         val user = auth.currentUser
         if (user != null) {
@@ -224,33 +204,30 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    // Check if email is verified and update Firestore
+    // Buat cek status verifikasi email
     fun checkEmailVerificationStatus() {
         val user = auth.currentUser
-        if (user != null) {
-            user.reload().addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    if (user.isEmailVerified) {
-                        // Update status di Firestore
-                        firestore.collection("users").document(user.uid)
-                            .update(
-                                mapOf(
-                                    "emailVerified" to true,
-                                    "updatedAt" to Timestamp.now()
-                                )
+        user?.reload()?.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                if (user.isEmailVerified) {
+                    firestore.collection("users").document(user.uid)
+                        .update(
+                            mapOf(
+                                "emailVerified" to true,
+                                "updatedAt" to Timestamp.now()
                             )
-                            .addOnSuccessListener {
-                                _authState.value = AuthState.Authenticated
-                            }
-                    } else {
-                        _authState.value = AuthState.EmailNotVerified
-                    }
+                        )
+                        .addOnSuccessListener {
+                            _authState.value = AuthState.Authenticated
+                        }
+                } else {
+                    _authState.value = AuthState.EmailNotVerified
                 }
             }
         }
     }
 
-    // Existing functions...
+    // Buat update username
     fun updateUsername(newUsername: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
         val userId = auth.currentUser?.uid
         if (userId != null) {
@@ -278,7 +255,7 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    // Di AuthViewModel.kt
+    // Buat autentikasi ulang user saat ngubah pasword dan cahnge emaik
     fun reauthenticateUser(
         currentPassword: String,
         onSuccess: () -> Unit,
@@ -301,6 +278,7 @@ class AuthViewModel : ViewModel() {
         }
     }
 
+    // Buat update password
     fun updatePasswordWithReauth(
         currentPassword: String,
         newPassword: String,
@@ -331,7 +309,7 @@ class AuthViewModel : ViewModel() {
         )
     }
 
-
+    // Buat update gender
     fun updateGender(gender: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
         val userId = auth.currentUser?.uid
         if (userId != null) {
@@ -349,6 +327,7 @@ class AuthViewModel : ViewModel() {
         }
     }
 
+    // Buat update tangal lahir
     fun updateDateOfBirth(dateOfBirth: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
         val userId = auth.currentUser?.uid
         if (userId != null) {
@@ -366,6 +345,7 @@ class AuthViewModel : ViewModel() {
         }
     }
 
+    // Buat update email pake verifikasi
     fun updateEmailWithVerification(
         currentPassword: String,
         newEmail: String,
@@ -380,20 +360,17 @@ class AuthViewModel : ViewModel() {
                 return
             }
 
-            // Re-authenticate user dengan current password
             val credential = EmailAuthProvider.getCredential(user.email!!, currentPassword)
 
             user.reauthenticate(credential)
                 .addOnCompleteListener { reauthTask ->
                     if (reauthTask.isSuccessful) {
-                        // Gunakan verifyBeforeUpdateEmail untuk mengirim link verifikasi
                         user.verifyBeforeUpdateEmail(newEmail)
                             .addOnCompleteListener { verifyTask ->
                                 if (verifyTask.isSuccessful) {
                                     onSuccess()
                                 } else {
                                     val errorMessage = verifyTask.exception?.message ?: "Failed to send verification email"
-                                    // Handle specific error untuk email yang sudah digunakan
                                     if (errorMessage.contains("email-already-in-use") ||
                                         errorMessage.contains("already in use")) {
                                         onError("Email is already in use")
@@ -411,7 +388,7 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    // Tambahkan fungsi ini ke AuthViewModel.kt
+    // Buat update email di Firestore
     fun updateEmailInFirestore(
         userId: String,
         newEmail: String,
@@ -428,8 +405,9 @@ class AuthViewModel : ViewModel() {
             }
     }
 
+    // Buat ngecek status email update
     fun checkEmailUpdateStatus(
-        onEmailUpdated: (String, String) -> Unit, // (newEmail, userId) -> Unit
+        onEmailUpdated: (String, String) -> Unit,
         onError: (String) -> Unit
     ) {
         val user = auth.currentUser
@@ -452,7 +430,7 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    // Fungsi untuk handle setelah email verification
+    // Buat handle setelah email verification
     fun handleEmailVerificationComplete(
         newEmail: String,
         onSuccess: () -> Unit,
@@ -460,15 +438,12 @@ class AuthViewModel : ViewModel() {
     ) {
         val user = auth.currentUser
         if (user != null) {
-            // Reload user data untuk mendapatkan status terbaru
             user.reload().addOnCompleteListener { reloadTask ->
                 if (reloadTask.isSuccessful && user.isEmailVerified) {
-                    // Update email di Firestore
                     updateEmailInFirestore(
                         userId = user.uid,
                         newEmail = newEmail,
                         onSuccess = {
-                            // Logout user setelah update berhasil
                             logout {
                                 onSuccess()
                             }
@@ -484,9 +459,7 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-
-
-
+    // Buat ambil data user
     fun getUserData(onSuccess: (Map<String, Any>) -> Unit, onError: (String) -> Unit) {
         val userId = auth.currentUser?.uid
         if (userId != null) {
@@ -505,6 +478,7 @@ class AuthViewModel : ViewModel() {
         }
     }
 
+    // Buat logout
     fun logout(onLogoutSuccess: () -> Unit) {
         FirebaseAuth.getInstance().signOut()
         onLogoutSuccess()

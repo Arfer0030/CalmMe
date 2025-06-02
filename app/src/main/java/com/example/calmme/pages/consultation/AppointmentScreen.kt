@@ -5,15 +5,41 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,14 +57,12 @@ import com.example.calmme.R
 import com.example.calmme.commons.LocalNavController
 import com.example.calmme.commons.Routes
 import com.example.calmme.data.PsychologistData
-import com.example.calmme.commons.Resource
 import com.example.calmme.data.ScheduleData
 import com.example.calmme.data.TimeSlot
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Calendar
+import java.util.Locale
 
 @Composable
 fun AppointmentScreen(
@@ -61,7 +85,7 @@ fun AppointmentScreen(
 
     var showDatePicker by remember { mutableStateOf(false) }
 
-    // Check if psychologist is selected
+    // Cek psikolog yg dipilih
     if (psychologist == null) {
         LaunchedEffect(Unit) {
             Toast.makeText(context, "No psychologist selected", Toast.LENGTH_SHORT).show()
@@ -74,14 +98,14 @@ fun AppointmentScreen(
         }
     }
 
-    // Load time slots when date is selected
+    // Load time slot yang tersedia
     LaunchedEffect(selectedDate) {
-        if (selectedDate.isNotEmpty() && psychologist != null) {
+        if (selectedDate.isNotEmpty()) {
             appointmentViewModel.loadAvailableTimeSlots(psychologist!!.psychologistId, selectedDate)
         }
     }
 
-    // Handle error messages
+    // Handel error messages
     LaunchedEffect(errorMessage) {
         errorMessage?.let { message ->
             Toast.makeText(context, message, Toast.LENGTH_LONG).show()
@@ -115,15 +139,12 @@ fun AppointmentScreen(
                 onDatePickerClick = { showDatePicker = true },
                 onTimeSlotSelect = { appointmentViewModel.setSelectedTimeSlot(it) },
                 onMethodSelect = { appointmentViewModel.setConsultationMethod(it) },
-                // Di AppointmentScreen.kt - Modifikasi bagian onSubmitClick
-                // Di AppointmentScreen.kt - Modifikasi bagian onSubmitClick
-                // Di AppointmentScreen.kt - Menggunakan fungsi alternatif
                 onSubmitClick = {
                     if (selectedDate.isNotEmpty() && selectedTimeSlot != null && selectedMethod.isNotEmpty()) {
                         coroutineScope.launch {
                             appointmentViewModel.createAppointmentDirectly(
                                 psychologistId = psychologist!!.psychologistId,
-                                onSuccess = { appointmentId, needsPayment ->
+                                onSuccess = { _, needsPayment ->
                                     if (needsPayment) {
                                         Toast.makeText(context, "Appointment created! Please complete payment to confirm.", Toast.LENGTH_LONG).show()
                                         navController.navigate(Routes.Subscribe.route)
@@ -145,7 +166,7 @@ fun AppointmentScreen(
         }
     }
 
-    // Date Picker Dialog
+    // Dialog buat milih tanggal
     if (showDatePicker) {
         DatePickerDialog(
             onDateSelected = { date ->
@@ -157,12 +178,13 @@ fun AppointmentScreen(
     }
 }
 
+// Bagian top bar screen
 @Composable
 fun AppointmentTopBar(navController: NavController) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(20.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -187,6 +209,7 @@ fun AppointmentTopBar(navController: NavController) {
     }
 }
 
+// Bagian gambar psikolog
 @Composable
 fun PsychologistImageSection(psychologist: PsychologistData) {
     Box(
@@ -211,6 +234,7 @@ fun PsychologistImageSection(psychologist: PsychologistData) {
     }
 }
 
+// Bagian info psikolog
 @Composable
 fun AppointmentInfoCard(
     psychologist: PsychologistData,
@@ -237,7 +261,6 @@ fun AppointmentInfoCard(
             )
             .padding(24.dp)
     ) {
-        // Visit Time Header
         Text(
             text = "Visit Time",
             style = MaterialTheme.typography.headlineMedium,
@@ -247,7 +270,7 @@ fun AppointmentInfoCard(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Psychologist Name and Title
+        // Bagian nama dan title psikolog
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth()
@@ -256,19 +279,18 @@ fun AppointmentInfoCard(
                 text = psychologist.name,
                 style = MaterialTheme.typography.displayLarge,
                 fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
+
             )
             Text(
                 text = psychologist.getSpecializationText(),
                 style = MaterialTheme.typography.bodyLarge,
-                color = Color.Gray,
-                textAlign = TextAlign.Center
+
             )
         }
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // About Section
+        // Bagian about
         Text(
             text = "About",
             style = MaterialTheme.typography.titleMedium,
@@ -277,28 +299,25 @@ fun AppointmentInfoCard(
         Text(
             text = psychologist.description.ifEmpty { "Experienced psychologist providing professional mental health support." },
             style = MaterialTheme.typography.bodyMedium,
-            color = Color.Gray
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Working Hours Section
+        // Bagian working hours
         WorkingHoursSection(
-            scheduleData = scheduleData,
             workingHours = workingHours
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Stats Section
+        // Bagian stats
         StatsSection(psychologist)
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Make Appointment Button
+        // Tombol make appointment
         MakeAppointmentButton(onClick = onDatePickerClick)
 
-        // Selected Date and Time Slots
         if (selectedDate.isNotEmpty()) {
             Spacer(modifier = Modifier.height(16.dp))
             SelectedDateCard(selectedDate, selectedTimeSlot)
@@ -314,24 +333,23 @@ fun AppointmentInfoCard(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Consultation Method Selector
+        // Bagian pemilihan metode konsultasi
         Column(
             modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally // Ini akan menengahkan children-nya
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             ConsultationMethodButton(R.drawable.ic_chat, "Chat", selectedMethod, onMethodSelect)
         }
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Submit Button
         SubmitButton(onClick = onSubmitClick)
     }
 }
 
+// Buat bikin bagian working hours
 @Composable
 fun WorkingHoursSection(
-    scheduleData: List<ScheduleData>,
     workingHours: Map<String, String>
 ) {
     Column {
@@ -350,19 +368,18 @@ fun WorkingHoursSection(
                 color = Color.Gray
             )
         } else {
-            // Tampilkan working hours berdasarkan schedule
             WorkingHoursDisplay(workingHours)
         }
     }
 }
 
+// Buat nampilin working hours dan ngelompokin berdasarkan hari
 @Composable
 fun WorkingHoursDisplay(workingHours: Map<String, String>) {
-    // Group days with same working hours
     val groupedHours = workingHours.entries
         .groupBy { it.value }
         .map { (hours, days) ->
-            val dayNames = days.map { it.key.getDayDisplayName() }
+            val dayNames = days.map {it.key}
             val dayRange = formatDayRange(dayNames)
             dayRange to hours
         }
@@ -388,20 +405,7 @@ fun WorkingHoursDisplay(workingHours: Map<String, String>) {
     }
 }
 
-// Helper functions
-fun String.getDayDisplayName(): String {
-    return when (this.lowercase()) {
-        "monday" -> "Mon"
-        "tuesday" -> "Tue"
-        "wednesday" -> "Wed"
-        "thursday" -> "Thu"
-        "friday" -> "Fri"
-        "saturday" -> "Sat"
-        "sunday" -> "Sun"
-        else -> this.replaceFirstChar { it.uppercase() }
-    }
-}
-
+// Buat bikin bagian stats isinya eucation, experience, license
 @Composable
 fun StatsSection(psychologist: PsychologistData) {
     Text(
@@ -431,6 +435,7 @@ fun StatsSection(psychologist: PsychologistData) {
     }
 }
 
+// Buat bikin item di stats
 @Composable
 fun StatsItem(value: String, label: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -447,6 +452,7 @@ fun StatsItem(value: String, label: String) {
     }
 }
 
+// Buat bikin bagian card selected date
 @Composable
 fun SelectedDateCard(selectedDate: String, selectedTimeSlot: TimeSlot?) {
     Card(
@@ -472,6 +478,7 @@ fun SelectedDateCard(selectedDate: String, selectedTimeSlot: TimeSlot?) {
     }
 }
 
+// Buat bikin bagian pilihan time slot
 @Composable
 fun TimeSlotSelection(
     availableTimeSlots: List<TimeSlot>,
@@ -512,7 +519,7 @@ fun TimeSlotSelection(
                     columns = GridCells.Fixed(2),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.height(200.dp)
+                    modifier = Modifier.height(100.dp)
                 ) {
                     items(availableTimeSlots) { timeSlot ->
                         TimeSlotCard(
@@ -527,6 +534,7 @@ fun TimeSlotSelection(
     }
 }
 
+// Buat bikin card tampilan timeslot
 @Composable
 fun TimeSlotCard(
     timeSlot: TimeSlot,
@@ -560,6 +568,7 @@ fun TimeSlotCard(
     }
 }
 
+// Buat bikin tombol make appointment
 @Composable
 fun MakeAppointmentButton(onClick: () -> Unit) {
     Box(
@@ -589,6 +598,7 @@ fun MakeAppointmentButton(onClick: () -> Unit) {
     }
 }
 
+// Buat bikin tombol pilihan method konsultasi
 @Composable
 fun ConsultationMethodButton(
     icon: Int,
@@ -616,7 +626,7 @@ fun ConsultationMethodButton(
     Spacer(modifier = Modifier.height(4.dp))
 }
 
-
+// Buat bikin tombol submit
 @Composable
 fun SubmitButton(onClick: () -> Unit) {
     Box(
@@ -641,6 +651,7 @@ fun SubmitButton(onClick: () -> Unit) {
     }
 }
 
+// Buat bikin dialog pilih tanggal dan ditampilin 7 hari terakhir
 @Composable
 fun DatePickerDialog(
     onDateSelected: (String) -> Unit,
@@ -654,7 +665,6 @@ fun DatePickerDialog(
                 Text("Available dates:")
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Generate next 7 days as available dates
                 val availableDates = generateAvailableDates()
 
                 availableDates.forEach { date ->
@@ -681,7 +691,7 @@ fun DatePickerDialog(
     )
 }
 
-// Helper function
+// Fungsi helper buat nload tanggal yang tersedia
 fun generateAvailableDates(): List<Pair<String, String>> {
     val calendar = Calendar.getInstance()
     val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
@@ -689,7 +699,7 @@ fun generateAvailableDates(): List<Pair<String, String>> {
 
     val dates = mutableListOf<Pair<String, String>>()
 
-    // Generate next 7 days
+    // Generate 7 hari
     for (i in 1..7) {
         calendar.add(Calendar.DAY_OF_MONTH, 1)
         val dateString = dateFormat.format(calendar.time)
@@ -700,6 +710,7 @@ fun generateAvailableDates(): List<Pair<String, String>> {
     return dates
 }
 
+// Fungsi helper buat ngelompokin range hari kerja yang tersedia
 fun formatDayRange(days: List<String>): String {
     return when {
         days.size == 1 -> days.first()
@@ -709,9 +720,10 @@ fun formatDayRange(days: List<String>): String {
     }
 }
 
+// Fungsi helper buat cek daftar hari merupakan hari yang berurutan
 fun isConsecutiveDays(days: List<String>): Boolean {
     val dayOrder = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-    val indices = days.mapNotNull { dayOrder.indexOf(it) }.sorted()
+    val indices = days.map { dayOrder.indexOf(it) }.sorted()
 
     if (indices.size <= 1) return false
 
@@ -720,4 +732,3 @@ fun isConsecutiveDays(days: List<String>): Boolean {
     }
     return true
 }
-

@@ -1,7 +1,5 @@
 package com.example.calmme.pages.profile
 
-import android.content.Context
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -18,19 +16,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import com.example.calmme.R
 import com.example.calmme.commons.LocalNavController
 import com.example.calmme.commons.Routes
 import com.example.calmme.pages.authentication.AuthViewModel
-import kotlinx.coroutines.launch
 
 @Composable
 fun EditSecurityScreen(authViewModel: AuthViewModel) {
     val navController = LocalNavController.current
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
 
     var currentEmail by remember { mutableStateOf("") }
     var newEmail by remember { mutableStateOf("") }
@@ -41,12 +35,9 @@ fun EditSecurityScreen(authViewModel: AuthViewModel) {
     var currentPasswordVisible by remember { mutableStateOf(false) }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
-
-    // State untuk menentukan mode (email atau password)
-    var updateMode by remember { mutableStateOf("email") } // "email" atau "password"
+    var updateMode by remember { mutableStateOf("email") }
     var showEmailVerificationDialog by remember { mutableStateOf(false) }
 
-    // Load current email saat screen dibuka
     LaunchedEffect(Unit) {
         authViewModel.getUserData(
             onSuccess = { userData ->
@@ -73,7 +64,6 @@ fun EditSecurityScreen(authViewModel: AuthViewModel) {
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.verticalScroll(rememberScrollState())
         ) {
-            // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -96,7 +86,6 @@ fun EditSecurityScreen(authViewModel: AuthViewModel) {
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Mode Selection
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -130,7 +119,6 @@ fun EditSecurityScreen(authViewModel: AuthViewModel) {
             Spacer(modifier = Modifier.height(24.dp))
 
             if (updateMode == "email") {
-                // Email Update Section
                 EmailUpdateSection(
                     currentEmail = currentEmail,
                     newEmail = newEmail,
@@ -141,7 +129,6 @@ fun EditSecurityScreen(authViewModel: AuthViewModel) {
                     onPasswordVisibilityToggle = { currentPasswordVisible = !currentPasswordVisible },
                     isLoading = isLoading,
                     onUpdateEmail = {
-                        // Validasi input
                         when {
                             newEmail.isBlank() -> {
                                 Toast.makeText(context, "Email cannot be empty", Toast.LENGTH_SHORT).show()
@@ -173,7 +160,6 @@ fun EditSecurityScreen(authViewModel: AuthViewModel) {
                     }
                 )
             } else {
-                // Password Update Section
                 PasswordUpdateSection(
                     currentPassword = currentPassword,
                     onCurrentPasswordChange = { currentPassword = it },
@@ -189,7 +175,6 @@ fun EditSecurityScreen(authViewModel: AuthViewModel) {
                     onConfirmPasswordVisibilityToggle = { confirmPasswordVisible = !confirmPasswordVisible },
                     isLoading = isLoading,
                     onUpdatePassword = {
-                        // Validasi input
                         when {
                             currentPassword.isBlank() -> {
                                 Toast.makeText(context, "Current password is required", Toast.LENGTH_SHORT).show()
@@ -229,19 +214,15 @@ fun EditSecurityScreen(authViewModel: AuthViewModel) {
         }
     }
 
-    // Di dalam EditSecurityScreen, update bagian dialog
     if (showEmailVerificationDialog) {
         EmailVerificationDialog(
             newEmail = newEmail,
-            authViewModel = authViewModel, // Pass authViewModel
+            authViewModel = authViewModel,
             onDismiss = {
                 showEmailVerificationDialog = false
                 navController.navigate(Routes.Authentication.route) {
                     popUpTo(0) { inclusive = true }
                 }
-            },
-            onCheckStatus = {
-                // Logic sudah dipindah ke dalam dialog
             }
         )
     }
@@ -260,7 +241,6 @@ fun EmailUpdateSection(
     onUpdateEmail: () -> Unit
 ) {
     Column {
-        // Current Email (Read Only)
         OutlinedTextField(
             value = currentEmail,
             onValueChange = { },
@@ -277,7 +257,6 @@ fun EmailUpdateSection(
             )
         )
 
-        // New Email
         OutlinedTextField(
             value = newEmail,
             onValueChange = onNewEmailChange,
@@ -292,7 +271,6 @@ fun EmailUpdateSection(
             )
         )
 
-        // Current Password for verification
         PasswordTextField(
             value = currentPassword,
             onValueChange = onCurrentPasswordChange,
@@ -303,7 +281,6 @@ fun EmailUpdateSection(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Info Text
         Text(
             text = "• Current password is required for security\n" +
                     "• A verification email will be sent to your new email\n" +
@@ -316,7 +293,6 @@ fun EmailUpdateSection(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Update Email Button
         Button(
             onClick = onUpdateEmail,
             shape = RoundedCornerShape(10.dp),
@@ -356,7 +332,6 @@ fun PasswordUpdateSection(
     onUpdatePassword: () -> Unit
 ) {
     Column {
-        // Current Password
         PasswordTextField(
             value = currentPassword,
             onValueChange = onCurrentPasswordChange,
@@ -365,7 +340,6 @@ fun PasswordUpdateSection(
             onVisibilityToggle = onCurrentPasswordVisibilityToggle
         )
 
-        // New Password
         PasswordTextField(
             value = newPassword,
             onValueChange = onNewPasswordChange,
@@ -374,7 +348,6 @@ fun PasswordUpdateSection(
             onVisibilityToggle = onPasswordVisibilityToggle
         )
 
-        // Confirm Password
         PasswordTextField(
             value = confirmPassword,
             onValueChange = onConfirmPasswordChange,
@@ -385,7 +358,6 @@ fun PasswordUpdateSection(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Info Text
         Text(
             text = "• Current password is required for security\n" +
                     "• New password must be at least 6 characters",
@@ -396,7 +368,6 @@ fun PasswordUpdateSection(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Update Password Button
         Button(
             onClick = onUpdatePassword,
             shape = RoundedCornerShape(10.dp),
@@ -422,8 +393,7 @@ fun PasswordUpdateSection(
 fun EmailVerificationDialog(
     newEmail: String,
     onDismiss: () -> Unit,
-    onCheckStatus: () -> Unit,
-    authViewModel: AuthViewModel // Tambahkan parameter
+    authViewModel: AuthViewModel
 ) {
     val context = LocalContext.current
     var isChecking by remember { mutableStateOf(false) }
@@ -463,7 +433,6 @@ fun EmailVerificationDialog(
                     authViewModel.checkEmailUpdateStatus(
                         onEmailUpdated = { updatedEmail, userId ->
                             if (updatedEmail == newEmail) {
-                                // Email sudah diverifikasi, update Firestore
                                 authViewModel.handleEmailVerificationComplete(
                                     newEmail = newEmail,
                                     onSuccess = {
@@ -519,7 +488,6 @@ fun EmailVerificationDialog(
         }
     )
 }
-
 
 @Composable
 fun PasswordTextField(

@@ -28,8 +28,6 @@ import kotlinx.coroutines.launch
 @Composable
 fun PsiEditProfileScreen(editPsikologViewModel: EditPsikologViewModel = viewModel()) {
     val navController = LocalNavController.current
-    val context = LocalContext.current
-
     var selectedTab by remember { mutableStateOf(0) }
     val tabs = listOf("Profile", "Schedule")
 
@@ -46,7 +44,6 @@ fun PsiEditProfileScreen(editPsikologViewModel: EditPsikologViewModel = viewMode
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -68,7 +65,6 @@ fun PsiEditProfileScreen(editPsikologViewModel: EditPsikologViewModel = viewMode
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Tab Row
             TabRow(
                 selectedTabIndex = selectedTab,
                 containerColor = Color.Transparent,
@@ -97,7 +93,6 @@ fun PsiEditProfileScreen(editPsikologViewModel: EditPsikologViewModel = viewMode
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Tab Content
             when (selectedTab) {
                 0 -> ProfileTab(editPsikologViewModel)
                 1 -> ScheduleTab(editPsikologViewModel)
@@ -126,7 +121,6 @@ fun ProfileTab(editPsikologViewModel: EditPsikologViewModel) {
         "relationship & Family", "trauma", "addiction",
     )
 
-    // Load data when psychologistData changes
     LaunchedEffect(psychologistData) {
         name = psychologistData.name
         description = psychologistData.description
@@ -141,7 +135,6 @@ fun ProfileTab(editPsikologViewModel: EditPsikologViewModel) {
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        // Name Field
         OutlinedTextField(
             value = name,
             onValueChange = { name = it },
@@ -156,7 +149,6 @@ fun ProfileTab(editPsikologViewModel: EditPsikologViewModel) {
             )
         )
 
-        // Description Field
         OutlinedTextField(
             value = description,
             onValueChange = { description = it },
@@ -173,7 +165,6 @@ fun ProfileTab(editPsikologViewModel: EditPsikologViewModel) {
             maxLines = 4
         )
 
-        // Experience Field
         OutlinedTextField(
             value = experience,
             onValueChange = { experience = it },
@@ -188,7 +179,6 @@ fun ProfileTab(editPsikologViewModel: EditPsikologViewModel) {
             )
         )
 
-        // Education Field
         OutlinedTextField(
             value = education,
             onValueChange = { education = it },
@@ -203,7 +193,6 @@ fun ProfileTab(editPsikologViewModel: EditPsikologViewModel) {
             )
         )
 
-        // License Field
         OutlinedTextField(
             value = license,
             onValueChange = { license = it },
@@ -220,7 +209,6 @@ fun ProfileTab(editPsikologViewModel: EditPsikologViewModel) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Specializations
         Text(
             text = "Specializations",
             fontSize = 16.sp,
@@ -228,7 +216,6 @@ fun ProfileTab(editPsikologViewModel: EditPsikologViewModel) {
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
-        // Specialization chips
         Column {
             availableSpecializations.chunked(2).forEach { rowItems ->
                 Row(
@@ -249,7 +236,6 @@ fun ProfileTab(editPsikologViewModel: EditPsikologViewModel) {
                             modifier = Modifier.weight(1f)
                         )
                     }
-                    // Fill remaining space if odd number of items
                     if (rowItems.size == 1) {
                         Spacer(modifier = Modifier.weight(1f))
                     }
@@ -260,7 +246,6 @@ fun ProfileTab(editPsikologViewModel: EditPsikologViewModel) {
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Save Button
         Button(
             onClick = {
                 if (name.isBlank()) {
@@ -329,11 +314,9 @@ fun ScheduleTab(editPsikologViewModel: EditPsikologViewModel) {
         "09:00-10:00", "10:00-11:00", "11:00-12:00", "13:00-14:00",
         "14:00-15:00", "15:00-16:00", "16:00-17:00"
     )
-
     var selectedDay by remember { mutableStateOf("monday") }
     var selectedTimeSlots by remember { mutableStateOf(setOf<String>()) }
 
-    // Load existing schedule for selected day
     LaunchedEffect(selectedDay, schedules, psychologistData.psychologistId) {
         if (psychologistData.psychologistId.isNotEmpty()) {
             editPsikologViewModel.loadSchedules()
@@ -353,15 +336,12 @@ fun ScheduleTab(editPsikologViewModel: EditPsikologViewModel) {
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 16.dp)
         )
-
-        // Day Selection
         Text(
             text = "Select Day",
             fontSize = 16.sp,
             fontWeight = FontWeight.Medium,
             modifier = Modifier.padding(bottom = 8.dp)
         )
-
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.padding(bottom = 16.dp)
@@ -374,15 +354,12 @@ fun ScheduleTab(editPsikologViewModel: EditPsikologViewModel) {
                 )
             }
         }
-
-        // Time Slots Selection
         Text(
             text = "Available Time Slots",
             fontSize = 16.sp,
             fontWeight = FontWeight.Medium,
             modifier = Modifier.padding(bottom = 8.dp)
         )
-
         Column {
             timeSlots.chunked(2).forEach { rowItems ->
                 Row(
@@ -410,10 +387,8 @@ fun ScheduleTab(editPsikologViewModel: EditPsikologViewModel) {
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
-
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Save Schedule Button
         Button(
             onClick = {
                 coroutineScope.launch {
@@ -425,7 +400,6 @@ fun ScheduleTab(editPsikologViewModel: EditPsikologViewModel) {
                             isAvailable = true
                         )
                     }
-
                     editPsikologViewModel.updateSchedule(
                         dayOfWeek = selectedDay,
                         timeSlots = timeSlotObjects,
@@ -464,7 +438,6 @@ fun ScheduleTab(editPsikologViewModel: EditPsikologViewModel) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Current Schedule Summary
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(

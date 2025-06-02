@@ -23,7 +23,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.calmme.R
 import com.example.calmme.pages.assesment.AssesmentScreen
-import com.example.calmme.pages.assesment.AssesmentViewModel
 import com.example.calmme.pages.assesment.InitAssestScreen
 import com.example.calmme.pages.authentication.AuthScreen
 import com.example.calmme.pages.authentication.AuthViewModel
@@ -142,7 +141,6 @@ fun Application(
                 composable(Routes.EditProfile.route) {EditProfileScreen(authViewModel)}
                 composable(Routes.PsiEditProfile.route) { PsiEditProfileScreen() }
                 composable(Routes.EditSecurity.route) { EditSecurityScreen(authViewModel) }
-                // Perbaikan untuk EmailVerificationScreen
                 composable(
                     route = "email_verification/{email}",
                     arguments = listOf(navArgument("email") { type = NavType.StringType })
@@ -153,7 +151,6 @@ fun Application(
                         email = email
                     )
                 }
-                // Di Application.kt - Lebih sederhana
                 composable(
                     route = "chat/{chatRoomId}",
                     arguments = listOf(navArgument("chatRoomId") { type = NavType.StringType })

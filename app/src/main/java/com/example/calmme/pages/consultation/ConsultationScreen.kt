@@ -275,7 +275,6 @@ fun PsychologistCard(
                 modifier = Modifier.padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Placeholder for psychologist image
                 Box(
                     modifier = Modifier
                         .size(58.dp)
@@ -300,7 +299,6 @@ fun PsychologistCard(
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Spacer(modifier = Modifier.height(4.dp))
-                    // Ganti experience dengan today's time slots
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_clock),
@@ -358,7 +356,6 @@ fun TodayTimeSlotsDisplay(timeSlots: List<TimeSlot>) {
             )
         }
         timeSlots.size <= 3 -> {
-            // Show first few time slots
             val displaySlots = timeSlots.take(2)
             val slotsText = displaySlots.joinToString(", ") { "${it.startTime}-${it.endTime}" }
             val remainingCount = timeSlots.size - displaySlots.size
@@ -370,7 +367,6 @@ fun TodayTimeSlotsDisplay(timeSlots: List<TimeSlot>) {
             )
         }
         else -> {
-            // Show count and range
             val firstSlot = timeSlots.first()
             val lastSlot = timeSlots.last()
             Text(
@@ -382,8 +378,6 @@ fun TodayTimeSlotsDisplay(timeSlots: List<TimeSlot>) {
     }
 }
 
-
-// Extension functions untuk PsychologistData
 fun PsychologistData.getInitials(): String {
     return name.split(" ")
         .mapNotNull { it.firstOrNull()?.toString() }
@@ -400,14 +394,3 @@ fun PsychologistData.getSpecializationText(): String {
     }
 }
 
-fun PsychologistData.getExperienceText(): String {
-    return if (experience.isNotEmpty()) {
-        if (experience.contains("year", ignoreCase = true)) {
-            experience
-        } else {
-            "$experience years experience"
-        }
-    } else {
-        "Experience not specified"
-    }
-}

@@ -20,12 +20,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import com.example.calmme.R
 import com.example.calmme.commons.LocalNavController
 import com.example.calmme.commons.Routes
 import kotlinx.coroutines.launch
-import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 
 data class SubscriptionPlan(
     val id: String,
@@ -43,8 +41,6 @@ fun SubscribeScreen(viewModel: SubscribeViewModel) {
     val coroutineScope = rememberCoroutineScope()
     var selectedPlan by remember { mutableStateOf("") }
     val isLoading by viewModel.isLoading.collectAsState()
-
-
     val plans = listOf(
         SubscriptionPlan(
             id = "consultation",
@@ -78,7 +74,6 @@ fun SubscribeScreen(viewModel: SubscribeViewModel) {
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -104,12 +99,10 @@ fun SubscribeScreen(viewModel: SubscribeViewModel) {
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Progress Indicator
             ProgressIndicator(currentStep = 1, totalSteps = 3)
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Title
             Text(
                 text = "Choose",
                 fontSize = 24.sp,
@@ -120,7 +113,6 @@ fun SubscribeScreen(viewModel: SubscribeViewModel) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Subtitle
             Text(
                 text = "Unlock monthly or yearly consultations and join the CalmMe community by subscribing now!",
                 fontSize = 14.sp,
@@ -131,7 +123,6 @@ fun SubscribeScreen(viewModel: SubscribeViewModel) {
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Subscription Plans
             plans.forEach { plan ->
                 SubscriptionPlanCard(
                     plan = plan,
@@ -143,12 +134,9 @@ fun SubscribeScreen(viewModel: SubscribeViewModel) {
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Buy Now Button
             Button(
                 onClick = {
                     viewModel.selectPlan(selectedPlan)
-
-                    // Langsung proses payment dan kirim ke Firestore
                     coroutineScope.launch {
                         viewModel.processPayment(
                             onSuccess = {
@@ -277,7 +265,6 @@ fun ProgressIndicator(currentStep: Int, totalSteps: Int) {
                         shape = RoundedCornerShape(6.dp)
                     )
             )
-
             if (index < totalSteps - 1) {
                 Box(
                     modifier = Modifier

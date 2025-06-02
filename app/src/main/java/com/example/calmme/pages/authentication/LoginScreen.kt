@@ -42,7 +42,6 @@ fun LoginScreen(
                 popUpTo(Routes.Authentication.route) { inclusive = true }
             }
             is AuthState.EmailNotVerified -> {
-                // Navigate ke EmailVerificationScreen jika email belum diverifikasi
                 val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
                 val email = currentUser?.email ?: ""
                 navController.navigate(Routes.EmailVerification.createRoute(email))

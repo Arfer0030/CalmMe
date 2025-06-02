@@ -6,7 +6,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import com.example.calmme.commons.Application
-import com.example.calmme.pages.assesment.AssesmentViewModel
 import com.example.calmme.pages.authentication.AuthViewModel
 import com.example.calmme.pages.consultation.ConsultationViewModel
 import com.example.calmme.pages.dailymood.DailyMoodViewModel

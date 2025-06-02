@@ -19,17 +19,12 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -40,7 +35,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.calmme.R
 import com.example.calmme.commons.LocalNavController
 import kotlinx.serialization.Serializable
@@ -57,7 +51,7 @@ fun DailyMoodScreen(dailyMoodViewModel: DailyMoodViewModel) {
                     listOf(Color(0xFFe0c6e1), Color(0xFFfdfbfe), Color(0xFFf7e9f8))
                 )
             )
-            .padding(16.dp)
+            .padding(14.dp)
     ) {
         TopBar()
         Spacer(modifier = Modifier.height(20.dp))
@@ -101,7 +95,7 @@ fun TopBar() {
 @Composable
 fun MoodStreakSection(dailyMoodViewModel: DailyMoodViewModel) {
     val streak = dailyMoodViewModel.calculateStreakFromHistory(dailyMoodViewModel.moodHistory.value)
-    val recentMoods = dailyMoodViewModel.getRecentMoods(7) // Last 7 days
+    val recentMoods = dailyMoodViewModel.getRecentMoods(7)
 
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -149,7 +143,6 @@ fun MoodCard(day: String, mood: String, moodIcon: Int) {
         )
         Spacer(modifier = Modifier.height(4.dp))
 
-        // Mood Icon atau Empty State
         if (mood == "empty") {
             Box(
                 modifier = Modifier
@@ -185,7 +178,7 @@ fun MoodCard(day: String, mood: String, moodIcon: Int) {
 
 @Composable
 fun MoodChartSection(
-    dailyMoodViewModel: DailyMoodViewModel, // Ubah parameter
+    dailyMoodViewModel: DailyMoodViewModel,
     selectedPeriod: String,
     onPeriodChanged: (String) -> Unit
 ) {
@@ -193,7 +186,6 @@ fun MoodChartSection(
         Text("Mood Chart", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Period Selection
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -217,7 +209,6 @@ fun MoodChartSection(
         }
 
         Spacer(modifier = Modifier.height(12.dp))
-        // Hitung fill count
         val (fillCount, totalDays) = dailyMoodViewModel.calculateMoodFillCounts(selectedPeriod)
         Text(
             text = "${selectedPeriod}ly Average ($fillCount of $totalDays days filled)",
@@ -226,7 +217,6 @@ fun MoodChartSection(
         )
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Chart
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -234,11 +224,9 @@ fun MoodChartSection(
                 .background(Color(0xFFEFE0FF), shape = RoundedCornerShape(12.dp))
                 .padding(16.dp)
         ) {
-            // Gunakan fungsi dari ViewModel
             val moodPercentages = dailyMoodViewModel.calculateMoodPercentages(selectedPeriod)
 
             Column {
-                // Percentage labels
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -258,7 +246,6 @@ fun MoodChartSection(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Bars
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -278,14 +265,13 @@ fun MoodChartSection(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Mood icons at bottom
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     moodPercentages.forEach { (mood, _) ->
                         Icon(
-                            painter = painterResource(id = dailyMoodViewModel.getMoodIcon(mood)), // Gunakan ViewModel
+                            painter = painterResource(id = dailyMoodViewModel.getMoodIcon(mood)),
                             contentDescription = mood,
                             modifier = Modifier.size(20.dp),
                             tint = Color.Unspecified
@@ -296,7 +282,7 @@ fun MoodChartSection(
         }
 
         Spacer(modifier = Modifier.height(8.dp))
-        val dateRange = dailyMoodViewModel.getDateRange(selectedPeriod) // Gunakan ViewModel
+        val dateRange = dailyMoodViewModel.getDateRange(selectedPeriod)
         Text(
             text = dateRange,
             style = MaterialTheme.typography.titleSmall,
@@ -312,7 +298,7 @@ fun MoodBar(
     heightFraction: Float,
     mood: String,
     percentage: Float,
-    dailyMoodViewModel: DailyMoodViewModel // Tambah parameter
+    dailyMoodViewModel: DailyMoodViewModel
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
@@ -326,7 +312,7 @@ fun MoodBar(
         Box(
             modifier = Modifier
                 .width(24.dp)
-                .fillMaxHeight(heightFraction.coerceAtLeast(0.05f)) // Minimum height
+                .fillMaxHeight(heightFraction.coerceAtLeast(0.05f))
                 .background(
                     dailyMoodViewModel.getMoodColor(mood), // Gunakan ViewModel
                     shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)

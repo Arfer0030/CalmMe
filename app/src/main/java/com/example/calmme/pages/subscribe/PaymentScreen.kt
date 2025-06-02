@@ -37,7 +37,6 @@ fun PaymentScreen(viewModel: SubscribeViewModel) {
     val coroutineScope = rememberCoroutineScope()
     var selectedPayment by remember { mutableStateOf("bank") }
     val isLoading by viewModel.isLoading.collectAsState()
-    val paymentType by viewModel.paymentType.collectAsState()
 
     val paymentMethods = listOf(
         PaymentMethod("bank_transfer", "Bank", R.drawable.ic_bank),
@@ -58,7 +57,6 @@ fun PaymentScreen(viewModel: SubscribeViewModel) {
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -84,12 +82,10 @@ fun PaymentScreen(viewModel: SubscribeViewModel) {
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Progress Indicator
             ProgressIndicator(currentStep = 2, totalSteps = 3)
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Title
             Text(
                 text = "Payment",
                 fontSize = 24.sp,
@@ -100,7 +96,6 @@ fun PaymentScreen(viewModel: SubscribeViewModel) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Subtitle
             Text(
                 text = "Select your payment method",
                 fontSize = 14.sp,
@@ -111,7 +106,6 @@ fun PaymentScreen(viewModel: SubscribeViewModel) {
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Payment Methods
             paymentMethods.forEach { method ->
                 PaymentMethodCard(
                     method = method,
@@ -123,7 +117,6 @@ fun PaymentScreen(viewModel: SubscribeViewModel) {
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Add Button
             Button(
                 onClick = {
                     coroutineScope.launch {
@@ -208,7 +201,6 @@ fun PaymentMethodCard(
                     fontWeight = FontWeight.Medium
                 )
             }
-
             Icon(
                 painter = painterResource(id = R.drawable.ic_arrow),
                 contentDescription = "Select",
