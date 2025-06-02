@@ -55,10 +55,7 @@ fun ProfileScreen(authViewModel: AuthViewModel) {
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFFF3E7FE),
-                        Color(0xFFF7F2F9)
-                    )
+                    listOf(Color(0xFFF7E7F8), Color.White,Color(0xFFF7E7F8))
                 )
             )
     ) {
@@ -167,7 +164,7 @@ fun ProfileScreen(authViewModel: AuthViewModel) {
                     val menuItems = listOf(
                         "Security",
                         "Notifications",
-                        "Membership",
+                        "Payment",
                         "Help",
                         "About"
                     )
@@ -184,16 +181,16 @@ fun ProfileScreen(authViewModel: AuthViewModel) {
                                             navController.navigate(Routes.EditSecurity.route)
                                         }
                                         "notifications" -> {
-
-                                        }
-                                        "membership" -> {
                                             navController.navigate(Routes.History.route)
                                         }
+                                        "payment" -> {
+                                            navController.navigate(Routes.PaymentHistory.route)
+                                        }
                                         "help" -> {
-
+                                            navController.navigate(Routes.Help.route)
                                         }
                                         "about" -> {
-
+                                            navController.navigate(Routes.About.route)
                                         }
                                     }
                                 }
@@ -201,7 +198,7 @@ fun ProfileScreen(authViewModel: AuthViewModel) {
                             val iconRes = when (item.lowercase()) {
                                 "security" -> R.drawable.security
                                 "notifications" -> R.drawable.notifications
-                                "membership" -> R.drawable.membership
+                                "payment" -> R.drawable.membership
                                 "help" -> R.drawable.help
                                 "about" -> R.drawable.about
                                 else -> android.R.drawable.ic_menu_help

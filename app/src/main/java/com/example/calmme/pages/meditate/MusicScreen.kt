@@ -172,7 +172,7 @@ fun MusicScreen(
             .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
-                    listOf(Color(0xFFF4EAF9), Color(0xFFFBE9F2))
+                    listOf(Color(0xFFF7E7F8), Color.White,Color(0xFFF7E7F8))
                 )
             )
     ) {

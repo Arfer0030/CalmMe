@@ -36,7 +36,7 @@ fun PsiEditProfileScreen(editPsikologViewModel: EditPsikologViewModel = viewMode
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    listOf(Color(0xFFF3E7FE), Color(0xFFF7F2F9))
+                    listOf(Color(0xFFF7E7F8), Color.White,Color(0xFFF7E7F8))
                 )
             )
             .padding(24.dp)

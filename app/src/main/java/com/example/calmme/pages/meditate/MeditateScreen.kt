@@ -29,7 +29,7 @@ fun MeditateScreen(navController: NavController) {
             .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
-                    colors = listOf(Color(0xFFF4EAF9), Color(0xFFFBE9F2))
+                    listOf(Color(0xFFF7E7F8), Color.White,Color(0xFFF7E7F8))
                 )
             )
             .padding(16.dp)

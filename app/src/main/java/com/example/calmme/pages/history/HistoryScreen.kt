@@ -61,7 +61,7 @@ fun HistoryScreen(
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    listOf(Color(0xFFfdfbfe), Color(0xFFf7e9f8),Color(0xFFe0c6e1))
+                    listOf(Color(0xFFF7E7F8), Color.White,Color(0xFFF7E7F8))
                 )
             )
     ) {

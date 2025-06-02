@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -41,7 +42,6 @@ fun ChatScreen(
     var messageText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
 
-    // Initialize chat
     LaunchedEffect(chatRoomId) {
         chatViewModel.initializeChatWithRoomId(chatRoomId)
     }
@@ -62,9 +62,15 @@ fun ChatScreen(
     ) {
         // Header
         Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = Color(0xFFE8D5F2),
-            shadowElevation = 4.dp
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                Brush.linearGradient(
+                    listOf(Color(0xFFB8F7FD),Color(0xFFCEBFE6))
+                )
+            ),
+            color = Color.Transparent,
+
         ) {
             Row(
                 modifier = Modifier
@@ -142,7 +148,7 @@ fun ChatScreen(
             )
         }
 
-        // Messages list
+        // Pesan
         LazyColumn(
             modifier = Modifier.weight(1f),
             state = listState,
@@ -156,7 +162,7 @@ fun ChatScreen(
             }
         }
 
-        // Message input
+        // Input pesan
         Surface(
             modifier = Modifier.fillMaxWidth(),
             color = Color.White,
@@ -220,7 +226,6 @@ fun ChatItem(
         horizontalArrangement = if (isCurrentUser) Arrangement.End else Arrangement.Start
     ) {
         if (!isCurrentUser) {
-            // profile psikolog
             Box(
                 modifier = Modifier
                     .size(32.dp)
@@ -261,15 +266,12 @@ fun ChatItem(
                     fontSize = 14.sp
                 )
             }
-
-            // Timestamp
             Text(
                 text = formatTimestamp(message.timestamp),
                 fontSize = 11.sp,
                 color = Color.Gray,
                 modifier = Modifier.padding(top = 2.dp, start = 4.dp, end = 4.dp)
             )
-
             // Checkmark buat pesan yang dikirim
             if (isCurrentUser) {
                 Icon(
