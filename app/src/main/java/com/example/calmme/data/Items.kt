@@ -4,7 +4,7 @@ import androidx.compose.ui.graphics.Color
 import com.example.calmme.R
 import com.example.calmme.commons.Routes
 
-// Daftar mood dan ikon masing-masing (sesuaikan dengan resource kamu)
+// Daftar mood dan ikon masing-masing
 val moods = listOf(
     "calm" to R.drawable.md_calm,
     "happy" to R.drawable.md_happy,
@@ -17,6 +17,7 @@ val moods = listOf(
     "worried" to R.drawable.md_worried,
 )
 
+// Data buat bikin card categories di home
 data class CategoryData(
     val name: String,
     val icon: Int,

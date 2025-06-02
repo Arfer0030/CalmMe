@@ -3,36 +3,14 @@ package com.example.calmme.pages.consultation
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -45,13 +23,17 @@ import androidx.compose.ui.unit.sp
 import com.example.calmme.R
 import com.example.calmme.commons.LocalNavController
 import com.example.calmme.commons.Routes
-import com.example.calmme.data.psychologistss
-import kotlinx.serialization.Serializable
-
+import com.example.calmme.data.PsychologistData
+import com.example.calmme.data.TimeSlot
 
 @Composable
 fun ConsultationScreen(consultationViewModel: ConsultationViewModel) {
-    val psychologists by consultationViewModel.psychologists.collectAsState()
+    val filteredPsychologists by consultationViewModel.filteredPsychologists.collectAsState()
+    val isLoading by consultationViewModel.isLoading.collectAsState()
+    val errorMessage by consultationViewModel.errorMessage.collectAsState()
+
+    var searchText by remember { mutableStateOf("") }
+    var selectedSpecialization by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -65,9 +47,28 @@ fun ConsultationScreen(consultationViewModel: ConsultationViewModel) {
     ) {
         ConsulHeader()
         Spacer(modifier = Modifier.height(12.dp))
-        SearchBar()
+        SearchBar(
+            searchText = searchText,
+            onSearchTextChange = {
+                searchText = it
+                consultationViewModel.searchPsychologists(it)
+            }
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        SpecializationFilter(
+            selectedSpecialization = selectedSpecialization,
+            onSpecializationSelected = { specialization ->
+                selectedSpecialization = specialization
+                consultationViewModel.filterPsychologistsBySpecialization(specialization)
+            }
+        )
         Spacer(modifier = Modifier.height(24.dp))
-        TopPsychologistsSection(psychologists, consultationViewModel)
+        TopPsychologistsSection(
+            psychologists = filteredPsychologists,
+            consultationViewModel = consultationViewModel,
+            isLoading = isLoading,
+            errorMessage = errorMessage
+        )
     }
 }
 
@@ -76,8 +77,8 @@ fun ConsulHeader() {
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center)
-    {
+        verticalArrangement = Arrangement.Center
+    ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -98,20 +99,23 @@ fun ConsulHeader() {
         }
         Spacer(modifier = Modifier.height(30.dp))
         Text(
-            text = "Let’s find your psychologist!",
+            text = "Let's find your psychologist!",
             style = MaterialTheme.typography.headlineMedium,
         )
     }
 }
 
 @Composable
-fun SearchBar(modifier: Modifier = Modifier) {
-    var searchText by remember { mutableStateOf("") }
+fun SearchBar(
+    searchText: String,
+    onSearchTextChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
     TextField(
         value = searchText,
-        onValueChange = { searchText = it },
+        onValueChange = onSearchTextChange,
         placeholder = {
-            Text("Search psychologist", style = MaterialTheme.typography.bodyLarge, color = Color.Gray)
+            Text("Search psychologist name...", style = MaterialTheme.typography.bodyLarge, color = Color.Gray)
         },
         trailingIcon = {
             Icon(
@@ -129,11 +133,43 @@ fun SearchBar(modifier: Modifier = Modifier) {
     )
 }
 
+@Composable
+fun SpecializationFilter(
+    selectedSpecialization: String,
+    onSpecializationSelected: (String) -> Unit
+) {
+    val specializations = listOf(
+        "All", "Anxiety", "Depression", "Relationship", "Trauma", "Addiction"
+    )
+
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(specializations) { specialization ->
+            FilterChip(
+                selected = selectedSpecialization == specialization ||
+                        (selectedSpecialization.isEmpty() && specialization == "All"),
+                onClick = {
+                    onSpecializationSelected(
+                        if (specialization == "All") "" else specialization.lowercase()
+                    )
+                },
+                label = { Text(specialization) },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = Color(0xFF933C9F),
+                    selectedLabelColor = Color.White
+                )
+            )
+        }
+    }
+}
 
 @Composable
 fun TopPsychologistsSection(
-    psychologists: List<PshycologistItem>,
-    consultationViewModel: ConsultationViewModel
+    psychologists: List<PsychologistData>,
+    consultationViewModel: ConsultationViewModel,
+    isLoading: Boolean,
+    errorMessage: String?
 ) {
     Column {
         Row(
@@ -151,20 +187,70 @@ fun TopPsychologistsSection(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(psychologists) { psychologist ->
-                PsychologistCard(psychologist, consultationViewModel)
+        when {
+            isLoading -> {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Color(0xFF933C9F))
+                }
+            }
+            errorMessage != null -> {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE))
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(
+                            text = "Error: $errorMessage",
+                            color = Color.Red
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(
+                            onClick = { consultationViewModel.refreshPsychologists() },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF933C9F))
+                        ) {
+                            Text("Retry", color = Color.White)
+                        }
+                    }
+                }
+            }
+            psychologists.isEmpty() -> {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
+                ) {
+                    Text(
+                        text = "No psychologists found",
+                        modifier = Modifier.padding(16.dp),
+                        color = Color.Gray
+                    )
+                }
+            }
+            else -> {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(psychologists) { psychologist ->
+                        PsychologistCard(psychologist, consultationViewModel)
+                    }
+                }
             }
         }
     }
 }
 
-
 @Composable
-fun PsychologistCard(psychologist: PshycologistItem, consultationViewModel: ConsultationViewModel) {
+fun PsychologistCard(
+    psychologist: PsychologistData,
+    consultationViewModel: ConsultationViewModel
+) {
     val navController = LocalNavController.current
+    val todayTimeSlots = consultationViewModel.getTodayTimeSlotsForPsychologist(psychologist.psychologistId)
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -189,26 +275,41 @@ fun PsychologistCard(psychologist: PshycologistItem, consultationViewModel: Cons
                 modifier = Modifier.padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Image(
-                    painter = painterResource(id = psychologist.image),
-                    contentDescription = "Psychologist",
-                    modifier = Modifier.size(58.dp)
-                )
+                Box(
+                    modifier = Modifier
+                        .size(58.dp)
+                        .background(Color(0xFF8E44AD), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = psychologist.getInitials(),
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
                 Spacer(modifier = Modifier.width(12.dp))
+
                 Column(modifier = Modifier.weight(1f)) {
                     Text(psychologist.name, style = MaterialTheme.typography.titleMedium)
-                    Text(psychologist.description, style = MaterialTheme.typography.bodyMedium)
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        psychologist.getSpecializationText(),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_clock),
-                            contentDescription = "Clock",
+                            contentDescription = "Available today",
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(psychologist.schedule, style = MaterialTheme.typography.bodyLarge)
 
+                        TodayTimeSlotsDisplay(timeSlots = todayTimeSlots)
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.End
@@ -238,12 +339,58 @@ fun PsychologistCard(psychologist: PshycologistItem, consultationViewModel: Cons
     }
 }
 
+@Composable
+fun TodayTimeSlotsDisplay(timeSlots: List<TimeSlot>) {
+    when {
+        timeSlots.isEmpty() -> {
+            Text(
+                "No slots today",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray
+            )
+        }
+        timeSlots.size == 1 -> {
+            Text(
+                "${timeSlots.first().startTime}-${timeSlots.first().endTime}",
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
+        timeSlots.size <= 3 -> {
+            val displaySlots = timeSlots.take(2)
+            val slotsText = displaySlots.joinToString(", ") { "${it.startTime}-${it.endTime}" }
+            val remainingCount = timeSlots.size - displaySlots.size
 
-@Serializable
-data class PshycologistItem(
-    val name: String,
-    val image: Int,
-    val description: String,
-    val about: String,
-    val schedule: String
-)
+            Text(
+                text = if (remainingCount > 0) "$slotsText +$remainingCount more" else slotsText,
+                style = MaterialTheme.typography.bodySmall,
+                maxLines = 1
+            )
+        }
+        else -> {
+            val firstSlot = timeSlots.first()
+            val lastSlot = timeSlots.last()
+            Text(
+                "${timeSlots.size} slots (${firstSlot.startTime}-${lastSlot.endTime})",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF4CAF50)
+            )
+        }
+    }
+}
+
+fun PsychologistData.getInitials(): String {
+    return name.split(" ")
+        .mapNotNull { it.firstOrNull()?.toString() }
+        .take(2)
+        .joinToString("")
+        .uppercase()
+}
+
+fun PsychologistData.getSpecializationText(): String {
+    return when {
+        specialization.isEmpty() -> "General Psychology"
+        specialization.size == 1 -> specialization.first().replaceFirstChar { it.uppercase() }
+        else -> specialization.joinToString(", ") { it.replaceFirstChar { char -> char.uppercase() } }
+    }
+}
+

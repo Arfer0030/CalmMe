@@ -35,7 +35,7 @@ fun MeditateScreen(navController: NavController) {
             .padding(16.dp)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp, top = 4.dp),
+            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp, top = 8.dp),
             horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically
         ) {

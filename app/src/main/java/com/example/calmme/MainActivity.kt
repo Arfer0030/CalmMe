@@ -6,7 +6,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import com.example.calmme.commons.Application
-import com.example.calmme.pages.assesment.AssesmentViewModel
 import com.example.calmme.pages.authentication.AuthViewModel
 import com.example.calmme.pages.consultation.ConsultationViewModel
 import com.example.calmme.pages.dailymood.DailyMoodViewModel
@@ -19,7 +18,6 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         val authViewModel : AuthViewModel by viewModels()
         val consultationViewModel : ConsultationViewModel by viewModels()
-        val assesmentViewModel : AssesmentViewModel by viewModels()
         val dailyMoodViewModel : DailyMoodViewModel by viewModels()
         val subscribeViewModel : SubscribeViewModel by viewModels()
         setContent {
@@ -27,7 +25,6 @@ class MainActivity : ComponentActivity() {
                 Application(
                     authViewModel = authViewModel,
                     consultationViewModel = consultationViewModel,
-                    assesmentViewModel = assesmentViewModel,
                     dailyMoodViewModel = dailyMoodViewModel,
                     subscribeViewModel = subscribeViewModel,
                 )

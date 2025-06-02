@@ -23,11 +23,11 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.calmme.R
 import com.example.calmme.pages.assesment.AssesmentScreen
-import com.example.calmme.pages.assesment.AssesmentViewModel
 import com.example.calmme.pages.assesment.InitAssestScreen
 import com.example.calmme.pages.authentication.AuthScreen
 import com.example.calmme.pages.authentication.AuthViewModel
 import com.example.calmme.pages.authentication.EmailVerificationScreen
+import com.example.calmme.pages.chat.ChatScreen
 import com.example.calmme.pages.consultation.AppointmentScreen
 import com.example.calmme.pages.consultation.ConsultationScreen
 import com.example.calmme.pages.consultation.ConsultationViewModel
@@ -41,6 +41,7 @@ import com.example.calmme.pages.profile.ProfileScreen
 import com.example.calmme.pages.subscribe.SubscribeScreen
 import com.example.calmme.pages.profile.EditProfileScreen
 import com.example.calmme.pages.profile.EditSecurityScreen
+import com.example.calmme.pages.profile.PsiEditProfileScreen
 import com.example.calmme.pages.subscribe.ConfirmationScreen
 import com.example.calmme.pages.subscribe.PaymentScreen
 import com.example.calmme.pages.subscribe.SubscribeViewModel
@@ -56,7 +57,6 @@ data class NavigationItem(
 fun Application(
     authViewModel: AuthViewModel,
     consultationViewModel: ConsultationViewModel,
-    assesmentViewModel: AssesmentViewModel,
     dailyMoodViewModel: DailyMoodViewModel,
     subscribeViewModel: SubscribeViewModel,
 ) {
@@ -124,7 +124,7 @@ fun Application(
                 composable(Routes.Appointment.route) { AppointmentScreen(consultationViewModel) }
                 composable(Routes.History.route) { HistoryScreen() }
                 composable(Routes.Profile.route) { ProfileScreen(authViewModel) }
-                composable(Routes.Assesment.route) { AssesmentScreen(assesmentViewModel) }
+                composable(Routes.Assesment.route) { AssesmentScreen() }
                 composable(Routes.InitAssesment.route) { InitAssestScreen() }
                 composable(Routes.DailyMood.route) { DailyMoodScreen(dailyMoodViewModel) }
                 composable(Routes.Subscribe.route) { SubscribeScreen(subscribeViewModel) }
@@ -139,8 +139,8 @@ fun Application(
                     MusicScreen(navController, audioResId)
                 }
                 composable(Routes.EditProfile.route) {EditProfileScreen(authViewModel)}
+                composable(Routes.PsiEditProfile.route) { PsiEditProfileScreen() }
                 composable(Routes.EditSecurity.route) { EditSecurityScreen(authViewModel) }
-                // Perbaikan untuk EmailVerificationScreen
                 composable(
                     route = "email_verification/{email}",
                     arguments = listOf(navArgument("email") { type = NavType.StringType })
@@ -150,6 +150,13 @@ fun Application(
                         authViewModel = authViewModel,
                         email = email
                     )
+                }
+                composable(
+                    route = "chat/{chatRoomId}",
+                    arguments = listOf(navArgument("chatRoomId") { type = NavType.StringType })
+                ) { backStackEntry ->
+                    val chatRoomId = backStackEntry.arguments?.getString("chatRoomId") ?: ""
+                    ChatScreen(chatRoomId = chatRoomId)
                 }
 
             }
@@ -174,7 +181,9 @@ fun shouldShowBottomBar(): Boolean {
         Routes.Payment.route,
         Routes.Subscribe.route,
         Routes.EditSecurity.route,
-        "email_verification/{email}"
+        "email_verification/{email}",
+        Routes.Chat.route,
+        Routes.PsiEditProfile.route,
     )
 
     return currentRoute != null && currentRoute !in noBottomBarScreens

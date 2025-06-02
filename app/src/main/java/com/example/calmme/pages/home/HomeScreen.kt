@@ -43,11 +43,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.calmme.R
 import com.example.calmme.commons.LocalNavController
 import com.example.calmme.commons.Routes
@@ -60,32 +58,29 @@ import com.example.calmme.pages.dailymood.DailyMoodViewModel
 import com.google.firebase.auth.FirebaseAuth
 import java.util.Calendar
 
-// HomeScreen.kt
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier, authViewModel: AuthViewModel, dailyMoodViewModel: DailyMoodViewModel) {
+fun HomeScreen(
+    modifier: Modifier = Modifier,
+    authViewModel: AuthViewModel,
+    dailyMoodViewModel: DailyMoodViewModel
+) {
     val navController = LocalNavController.current
-    val context = LocalContext.current
     val auth = FirebaseAuth.getInstance()
     val user = auth.currentUser
     val authState by authViewModel.authState.observeAsState()
 
-    // Sinkronisasi email saat user sudah login
     LaunchedEffect(authState) {
         when (authState) {
             AuthState.Authenticated -> {
-                // BENAR - dipanggil saat user sudah login
                 authViewModel.checkAndUpdateEmailOnLogin {
-                    // Email sudah disinkronkan
                 }
             }
             AuthState.Unauthenticated -> {
-                // Navigasi ke login tanpa check email
                 navController.navigate(Routes.Authentication.route) {
                     popUpTo(0) { inclusive = true }
                 }
             }
             else -> {
-                // Handle state lainnya jika diperlukan
             }
         }
     }
@@ -121,23 +116,19 @@ fun HomeScreen(modifier: Modifier = Modifier, authViewModel: AuthViewModel, dail
     }
 }
 
-
-
 @Composable
 fun HomeHeader(username: String, modifier: Modifier = Modifier, authViewModel: AuthViewModel, dailyMoodViewModel: DailyMoodViewModel) {
     val navController = LocalNavController.current
     var userData by remember { mutableStateOf<Map<String, Any>>(emptyMap()) }
     var actualUsername by remember { mutableStateOf(username) }
 
-    // Ambil data user dari Firestore
     LaunchedEffect(Unit) {
         authViewModel.getUserData(
             onSuccess = { data ->
                 userData = data
                 actualUsername = data["username"] as? String ?: username
             },
-            onError = { error ->
-                // Handle error
+            onError = {
             }
         )
     }
@@ -181,7 +172,6 @@ fun HomeHeader(username: String, modifier: Modifier = Modifier, authViewModel: A
     }
 }
 
-// Fungsi untuk greeting berdasarkan waktu
 @Composable
 fun getGreeting(): String {
     val calendar = Calendar.getInstance()
@@ -192,34 +182,6 @@ fun getGreeting(): String {
     }
 }
 
-@Composable
-fun SubscriptionBadge(userData: Map<String, Any>) {
-    val subscriptionStatus = userData["subscriptionStatus"] as? String ?: "inactive"
-
-    if (subscriptionStatus == "active") {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .background(
-                    Color(0xFFFFD700),
-                    RoundedCornerShape(12.dp)
-                )
-                .padding(horizontal = 8.dp, vertical = 4.dp)
-        ) {
-            Text("\uD83D\uDC51")
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                "Premium",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF933C9F),
-                fontWeight = FontWeight.Bold
-            )
-        }
-    }
-}
-
-
-// HomeMood.kt
 @Composable
 fun HomeMood(modifier: Modifier = Modifier, dailyMoodViewModel: DailyMoodViewModel) {
     val selectedMood by dailyMoodViewModel.selectedMood.collectAsState()
@@ -258,7 +220,6 @@ fun HomeMood(modifier: Modifier = Modifier, dailyMoodViewModel: DailyMoodViewMod
             }
         }
 
-        // Tampilkan mood yang dipilih hari ini
         selectedMood?.let { mood ->
             Text(
                 text = "Today's mood: $mood",
@@ -270,8 +231,6 @@ fun HomeMood(modifier: Modifier = Modifier, dailyMoodViewModel: DailyMoodViewMod
     }
 }
 
-
-// MoodItem.kt
 @Composable
 fun MoodItem(
     modifier: Modifier = Modifier,
@@ -307,7 +266,6 @@ fun MoodItem(
         )
     }
 }
-
 
 @Composable
 fun HomeForYou(modifier: Modifier = Modifier) {
@@ -419,7 +377,6 @@ fun HomeCategory(modifier: Modifier = Modifier) {
             .fillMaxWidth()
             .padding(2.dp)
     ) {
-        // Header Section
         Row(
             modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -442,7 +399,6 @@ fun HomeCategory(modifier: Modifier = Modifier) {
 
         Spacer(modifier.height(12.dp))
 
-        // Grid View
         LazyVerticalStaggeredGrid (
             columns = StaggeredGridCells.Fixed(2),
             modifier.height(350.dp),
@@ -451,7 +407,6 @@ fun HomeCategory(modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             itemsIndexed(categoryList) { index, category ->
-                // Cek apakah index genap atau ganjil untuk menentukan ukuran
                 if (index % 2 == 0 ) {
                     HomeCategoryItem(category = category, isLarge = true)
                 } else {
@@ -469,7 +424,7 @@ fun HomeCategoryItem(modifier: Modifier = Modifier, category: CategoryData, isLa
     Card(
         modifier
             .fillMaxWidth()
-            .height(if (isLarge) 180.dp else 150.dp) // Ukuran berbeda
+            .height(if (isLarge) 180.dp else 150.dp)
             .clickable {
                 navController.navigate(category.route)
             },

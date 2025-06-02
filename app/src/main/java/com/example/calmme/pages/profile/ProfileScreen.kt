@@ -20,7 +20,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import com.example.calmme.R
 import com.example.calmme.commons.LocalNavController
 import com.example.calmme.commons.Routes
@@ -33,12 +32,10 @@ val nunito = FontFamily(Font(R.font.nunito_regular))
 fun ProfileScreen(authViewModel: AuthViewModel) {
     val navController = LocalNavController.current
 
-    // State untuk menyimpan data user
     var username by remember { mutableStateOf("Loading...") }
     var email by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(true) }
 
-    // Load data user dari Firestore
     LaunchedEffect(Unit) {
         authViewModel.getUserData(
             onSuccess = { userData ->
@@ -168,7 +165,6 @@ fun ProfileScreen(authViewModel: AuthViewModel) {
                         .padding(24.dp)
                 ) {
                     val menuItems = listOf(
-                        "Privacy",
                         "Security",
                         "Notifications",
                         "Membership",
@@ -187,26 +183,22 @@ fun ProfileScreen(authViewModel: AuthViewModel) {
                                         "security" -> {
                                             navController.navigate(Routes.EditSecurity.route)
                                         }
-                                        "privacy" -> {
-                                            // Navigate ke Privacy screen
-                                        }
                                         "notifications" -> {
-                                            // Navigate ke Notifications screen
+
                                         }
                                         "membership" -> {
-                                            // Navigate ke Membership screen
+                                            navController.navigate(Routes.History.route)
                                         }
                                         "help" -> {
-                                            // Navigate ke Help screen
+
                                         }
                                         "about" -> {
-                                            // Navigate ke About screen
+
                                         }
                                     }
                                 }
                         ) {
                             val iconRes = when (item.lowercase()) {
-                                "privacy" -> R.drawable.privacy
                                 "security" -> R.drawable.security
                                 "notifications" -> R.drawable.notifications
                                 "membership" -> R.drawable.membership
@@ -264,9 +256,3 @@ fun ProfileScreen(authViewModel: AuthViewModel) {
         }
     }
 }
-
-data class MenuItem(
-    val title: String,
-    val icon: Int,
-    val onClick: () -> Unit
-)

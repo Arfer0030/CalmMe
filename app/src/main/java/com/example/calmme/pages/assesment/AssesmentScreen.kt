@@ -35,17 +35,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
 import com.example.calmme.R
 import com.example.calmme.commons.LocalNavController
 import com.example.calmme.commons.Routes
@@ -56,13 +51,11 @@ fun AssesmentScreen(assesmentViewModel: AssesmentViewModel = viewModel()) {
     val questions = assesmentViewModel.questions.collectAsState().value
     val canSubmit = assesmentViewModel.canSubmit.collectAsState().value
     val progress = assesmentViewModel.getProgress()
-    val context = LocalContext.current
     var showDialog by remember { mutableStateOf(false) }
     var score by remember { mutableStateOf(0) }
     var category by remember { mutableStateOf("") }
-    val navController = LocalNavController.current
 
-    // Reset jawaban ketika screen di-dispose (keluar dari assessment)
+    // Reset jawaban ketika keluar screen
     DisposableEffect(Unit) {
         onDispose {
             assesmentViewModel.resetAllAnswers()
@@ -92,7 +85,7 @@ fun AssesmentScreen(assesmentViewModel: AssesmentViewModel = viewModel()) {
                 TestResultPopup(
                     score = score,
                     category = category,
-                    onDismiss = { /* Kosongkan untuk mencegah dismiss */ },
+                    onDismiss = {  },
                 )
             }
 
@@ -110,7 +103,7 @@ fun AssesmentScreen(assesmentViewModel: AssesmentViewModel = viewModel()) {
                 item {
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Tampilkan pesan jika belum semua soal dijawab
+                    // Pesan saat ada yang belum dijawab
                     if (!canSubmit) {
                         val unansweredCount = assesmentViewModel.getUnansweredQuestionsCount()
                         Text(
@@ -150,6 +143,7 @@ fun AssesmentScreen(assesmentViewModel: AssesmentViewModel = viewModel()) {
     }
 }
 
+// Bagian atas screen
 @Composable
 fun HeaderSection(progress: Float, assesmentViewModel: AssesmentViewModel) {
     val navController = LocalNavController.current
@@ -169,7 +163,6 @@ fun HeaderSection(progress: Float, assesmentViewModel: AssesmentViewModel) {
                 contentDescription = "Back",
                 modifier = Modifier
                     .clickable {
-                        // Reset jawaban sebelum keluar
                         assesmentViewModel.resetAllAnswers()
                         navController.popBackStack()
                     }
@@ -191,7 +184,7 @@ fun HeaderSection(progress: Float, assesmentViewModel: AssesmentViewModel) {
     }
 }
 
-
+// Bagian informasi keterangan skala
 @Composable
 fun AnswerLegend() {
     Row(
@@ -207,6 +200,7 @@ fun AnswerLegend() {
     }
 }
 
+// Buat legend
 @Composable
 fun LegendItem(
     bgColor: Color,
@@ -233,7 +227,7 @@ fun LegendItem(
     }
 }
 
-
+// Bagian pertanyaan
 @Composable
 fun QuestionItemView(
     questionNumber: Int,
@@ -245,7 +239,6 @@ fun QuestionItemView(
             .fillMaxWidth()
             .padding(16.dp)
     ) {
-        // Pertanyaan
         Text(
             text = "$questionNumber. ${item.question}",
             style = MaterialTheme.typography.titleLarge
@@ -253,7 +246,6 @@ fun QuestionItemView(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Opsi Jawaban
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
@@ -281,6 +273,7 @@ fun QuestionItemView(
     }
 }
 
+// Bagian pop up hasil tes
 @Composable
 fun TestResultPopup(
     score: Int,
@@ -289,25 +282,24 @@ fun TestResultPopup(
 ) {
     val navController = LocalNavController.current
     Dialog(
-        onDismissRequest = { /* Kosongkan untuk mencegah dismiss ketika klik di luar */ },
+        onDismissRequest = {  },
         properties = DialogProperties(
-            dismissOnBackPress = false, // Mencegah dismiss dengan tombol back
-            dismissOnClickOutside = false // Mencegah dismiss ketika klik di luar
+            dismissOnBackPress = false,
+            dismissOnClickOutside = false
         )
     ) {
         Box(
             modifier = Modifier
-                .size(280.dp, 300.dp) // Ukuran popup
+                .size(280.dp, 300.dp)
                 .clip(RoundedCornerShape(16.dp))
         ) {
-            // Background Image
             Image(
-                painter = painterResource(id = R.drawable.ass_result), // Ganti dengan gambar background Anda
+                painter = painterResource(id = R.drawable.ass_result),
                 contentDescription = "Background",
                 modifier = Modifier.fillMaxSize(),
             )
 
-            // Overlay semi-transparan untuk meningkatkan readability text
+            // Overlay
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -317,7 +309,6 @@ fun TestResultPopup(
                     )
             )
 
-            // Content di atas background
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
@@ -328,7 +319,7 @@ fun TestResultPopup(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // Score Box
+                // Bagian skor
                 Box(
                     modifier = Modifier
                         .background(
@@ -346,7 +337,7 @@ fun TestResultPopup(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Category Box
+                // Bagian hasil kategori
                 Box(
                     modifier = Modifier
                         .background(
@@ -365,7 +356,6 @@ fun TestResultPopup(
 
                 Spacer(modifier = Modifier.height(30.dp))
 
-                // Button
                 Button(
                     onClick = {
                         navController.navigate(Routes.Home.route) {
@@ -398,5 +388,5 @@ fun TestResultPopup(
 @Serializable
 data class QuestionItem(
     val question: String,
-    var answer: Int = -1 // -1 artinya belum dijawab
+    var answer: Int = -1 // -1 belum dijawab
 )

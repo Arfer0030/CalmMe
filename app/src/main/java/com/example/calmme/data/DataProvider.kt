@@ -2,45 +2,78 @@ package com.example.calmme.data
 
 import com.example.calmme.R
 import com.example.calmme.pages.assesment.QuestionItem
-import com.example.calmme.pages.consultation.PshycologistItem
+import com.google.firebase.Timestamp
 
-val psychologistss = listOf(
-    PshycologistItem(
-        name = "Alvis, S.Psi.",
-        image = R.drawable.ps_men,
-        description = "General Clinical Psychologist",
-        about = "Alvis is a General Clinical Psychologist who provides empathetic and evidence-based support for individuals dealing with stress, anxiety, emotional struggles, and personal growth.",
-        schedule = "Mon-Fri 9:00 AM - 4:00 PM"
-    ),
-    PshycologistItem(
-        name = "Ainun Fahma, M.Psi.",
-        image = R.drawable.ps_women,
-        description = "General Clinical Psychologist",
-        about = "Ainun specializes in emotional and psychological well-being, focusing on self-discovery and holistic healing methods.",
-        schedule = "Mon-Fri 10:00 AM - 2:00 PM"
-    ),
-    PshycologistItem(
-        name = "Arga Santoso, M.Psi.",
-        image = R.drawable.ps_men,
-        description = "General Clinical Psychologist",
-        about = "Arga is dedicated to helping clients overcome challenges and achieve their goals through structured counseling and evidence-based practices.",
-        schedule = "Mon-Fri 1:00 PM - 8:00 PM"
-    ),
-    PshycologistItem(
-        name = "Alice Dian, M.Psi.",
-        image = R.drawable.ps_women,
-        description = "General Clinical Psychologist",
-        about = "Alice focuses on improving mental health through understanding behavioral patterns and cognitive restructuring.",
-        schedule = "Mon-Fri 9:00 AM - 4:00 PM"
-    ),
-    PshycologistItem(
-        name = "Ilham, M.Psi.",
-        image = R.drawable.ps_men,
-        description = "General Clinical Psychologist",
-        about = "Ilham provides compassionate support and practical strategies for coping with anxiety, stress, and mental health challenges.",
-        schedule = "Mon-Fri 5:00 PM - 7:00 PM"
-    )
+data class PsychologistData(
+    val psychologistId: String = "",
+    val userId: String = "",
+    val name: String = "",
+    val specialization: List<String> = emptyList(),
+    val description: String = "",
+    val experience: String = "",
+    val education: String = "",
+    val license: String = "",
+    val isAvailable: Boolean = true,
+    val createdAt: Timestamp? = null,
+    val updatedAt: Timestamp? = null
 )
+
+data class TimeSlot(
+    val startTime: String = "",
+    val endTime: String = "",
+    val isAvailable: Boolean = true
+)
+
+data class ScheduleData(
+    val scheduleId: String = "",
+    val psychologistId: String = "",
+    val dayOfWeek: String = "",
+    val timeSlots: List<TimeSlot> = emptyList(),
+    val date: String = "",
+    val isRecurring: Boolean = true,
+    val createdAt: Timestamp? = null
+)
+
+data class ChatMessage(
+    val messageId: String = "",
+    val chatRoomId: String = "",
+    val senderId: String = "",
+    val receiverId: String = "",
+    val messageText: String = "",
+    val timestamp: Timestamp = Timestamp.now(),
+    val senderName: String = ""
+)
+
+data class ChatRoom(
+    val chatRoomId: String = "",
+    val appointmentId: String = "",
+    val userId: List<String> = emptyList(),
+    val psychologistId: String = "",
+    val lastMessageText: String? = null,
+    val lastMessageTimestamp: Timestamp? = null,
+    val createdAt: Timestamp = Timestamp.now(),
+    val psychologistName: String = "",
+    val userName: String = "",
+    val isActive: Boolean = false,
+    val startTime: String = "",
+    val endTime: String = ""
+)
+
+data class AppointmentData(
+    val appointmentId: String = "",
+    val userId: String = "",
+    val psychologistId: String = "",
+    val appointmentDate: String = "",
+    val appointmentTime: String = "",
+    val status: String = "scheduled",
+    val paymentStatus: String = "pending",
+    val paymentMethod: String = "",
+    val consultationMethod: String = "",
+    val chatRoomId: String = "",
+    val createdAt: Timestamp? = null,
+    val updatedAt: Timestamp? = null
+)
+
 
 val Questions = listOf(
     QuestionItem("Feeling restless, anxious, or extremely tense"),

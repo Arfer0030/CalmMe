@@ -25,9 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -55,6 +53,7 @@ fun InitAssestScreen(){
     }
 }
 
+// Bagian top bar
 @Composable
 fun InitAssestTopBar(navController: NavController) {
     Row(
@@ -85,6 +84,7 @@ fun InitAssestTopBar(navController: NavController) {
     }
 }
 
+// Bagian informasi
 @Composable
 fun BannerAssests(navController: NavController) {
     Column(
@@ -158,6 +158,7 @@ fun BannerAssests(navController: NavController) {
     }
 }
 
+// Buat bikin point" keterangan di banner
 @Composable
 fun BannerPoint(title: String, desc: String) {
     Column(modifier = Modifier.padding(bottom = 8.dp)) {

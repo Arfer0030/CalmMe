@@ -9,7 +9,7 @@ class AssesmentViewModel : ViewModel() {
     private val _questions = MutableStateFlow(Questions)
     val questions: StateFlow<List<QuestionItem>> = _questions
 
-    // Tambahkan StateFlow untuk status submit
+    // StateFlow untuk status submit
     private val _canSubmit = MutableStateFlow(false)
     val canSubmit: StateFlow<Boolean> = _canSubmit
 
@@ -18,35 +18,38 @@ class AssesmentViewModel : ViewModel() {
         updatedList[index] = updatedList[index].copy(answer = answer)
         _questions.value = updatedList
 
-        // Update status submit setiap kali ada jawaban yang berubah
+        // Update status submit setiap ada jawaban yang berubah
         _canSubmit.value = areAllQuestionsAnswered()
     }
 
-    // Fungsi untuk mengecek apakah semua soal sudah dijawab
+    // Fungsi untuk mengecek semua soal sudah dijawab atau belom
     fun areAllQuestionsAnswered(): Boolean {
         return _questions.value.all { it.answer != -1 }
     }
 
-    // Fungsi untuk mendapatkan jumlah soal yang belum dijawab
+    // Fungsi untuk dapet jumlah soal yang belum dijawab
     fun getUnansweredQuestionsCount(): Int {
         return _questions.value.count { it.answer == -1 }
     }
 
-    // Fungsi untuk reset semua jawaban
+    // Fungsi untuk reset jawaban
     fun resetAllAnswers() {
         val resetList = _questions.value.map { it.copy(answer = -1) }
         _questions.value = resetList
         _canSubmit.value = false
     }
 
+    // Fungsi untuk bagian progressbar
     fun getProgress(): Float {
         val answered = _questions.value.count { it.answer != -1 }
         val total = _questions.value.size
         return if (total == 0) 0f else answered / total.toFloat()
     }
 
+    // Fungsi untuk total skor
     fun getTotalScore(): Int = _questions.value.sumOf { it.answer.coerceAtLeast(0) }
 
+    // Perhitungan skor dan kategorinya
     fun getResultCategory(score: Int): String = when (score) {
         in 0..4 -> "Minimal Anxiety"
         in 5..9 -> "Mild Anxiety"

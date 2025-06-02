@@ -40,7 +40,6 @@ fun RegisterScreen(
     LaunchedEffect(authState) {
         when (authState) {
             is AuthState.EmailVerificationSent -> {
-                // Gunakan Routes.EmailVerification.createRoute()
                 navController.navigate(Routes.EmailVerification.createRoute(email)) {
                     popUpTo(Routes.Authentication.route) { inclusive = false }
                 }
