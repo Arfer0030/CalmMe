@@ -9,19 +9,18 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import java.text.SimpleDateFormat
 import java.util.*
 
 class ChatRepository {
     private val firestore = FirebaseFirestore.getInstance()
 
-    // Fungsi buat atau ambil chatroom
     suspend fun createOrGetChatRoom(
         appointmentId: String,
         userId: String,
         psychologistId: String
     ): Resource<String> {
         return try {
-            // Cek kalo appointment dahh ada chatroom
             val existingChatRoom = firestore.collection("chat_rooms")
                 .whereEqualTo("appointmentId", appointmentId)
                 .limit(1)
@@ -32,7 +31,6 @@ class ChatRepository {
                 val chatRoomId = existingChatRoom.documents.first().getString("chatRoomId") ?: ""
                 Resource.Success(chatRoomId)
             } else {
-                // Bikin chatroom baru kalo belom ada
                 val chatRoomId = UUID.randomUUID().toString()
 
                 // Ambil data apppointment
@@ -95,9 +93,17 @@ class ChatRepository {
         }
     }
 
-    // Fungsi buat kirim pesan
+    // Buat ngirim pesan
     suspend fun sendMessage(chatRoomId: String, chatMessage: ChatMessage): Resource<Unit> {
         return try {
+            val chatRoomDoc = firestore.collection("chat_rooms").document(chatRoomId).get().await()
+            val startTime = chatRoomDoc.getString("startTime")
+            val endTime = chatRoomDoc.getString("endTime")
+
+            if (!isWithinChatTime(startTime, endTime)) {
+                return Resource.Error("Chat is only available during appointment time")
+            }
+
             val messageId = UUID.randomUUID().toString()
             val messageWithId = chatMessage.copy(messageId = messageId)
 
@@ -164,6 +170,30 @@ class ChatRepository {
             }
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Failed to load chat room")
+        }
+    }
+
+    // Cek
+    private fun isWithinChatTime(startTime: String?, endTime: String?): Boolean {
+        return try {
+            if (startTime.isNullOrEmpty() || endTime.isNullOrEmpty()) {
+                return true // Jika tidak ada batas waktu, boleh chat
+            }
+
+            val currentTime = Date()
+            val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
+
+            val start = sdf.parse(startTime)
+            val end = sdf.parse(endTime)
+
+            if (start != null && end != null) {
+                currentTime.time in start.time..end.time
+            } else {
+                true // Jika parsing gagal, boleh chat
+            }
+        } catch (e: Exception) {
+            Log.e("ChatRepository", "Error parsing chat time", e)
+            true // Jika error, boleh chat untuk safety
         }
     }
 }

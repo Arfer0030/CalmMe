@@ -2,6 +2,7 @@ package com.example.calmme.pages.chat
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import java.util.*
 import androidx.lifecycle.viewModelScope
 import com.example.calmme.data.ChatMessage
 import com.example.calmme.data.ChatRepository
@@ -12,6 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import com.example.calmme.commons.Resource
+import java.text.SimpleDateFormat
 
 class ChatViewModel(
     private val chatRepository: ChatRepository = ChatRepository()
@@ -33,6 +35,12 @@ class ChatViewModel(
 
     private var chatRoomId: String = ""
 
+    private val _canSendMessage = MutableStateFlow(true)
+    val canSendMessage: StateFlow<Boolean> = _canSendMessage
+
+    private val _chatTimeStatus = MutableStateFlow("")
+    val chatTimeStatus: StateFlow<String> = _chatTimeStatus
+
     init {
         _currentUserId.value = auth.currentUser?.uid ?: ""
     }
@@ -45,11 +53,10 @@ class ChatViewModel(
 
     private fun loadChatRoom() {
         viewModelScope.launch {
-            Log.d("ChatViewModel", "Loading chat room: $chatRoomId")
             when (val result = chatRepository.getChatRoom(chatRoomId)) {
                 is Resource.Success -> {
-                    Log.d("ChatViewModel", "Chat room loaded: ${result.data}")
                     _chatRoom.value = result.data
+                    checkChatTime()
                 }
                 is Resource.Error -> {
                     Log.e("ChatViewModel", "Failed to load chat room: ${result.message}")
@@ -74,15 +81,15 @@ class ChatViewModel(
 
     fun sendMessage(messageText: String) {
         if (messageText.isBlank()) return
+        if (!_canSendMessage.value) {
+            Log.e("ChatViewModel", "Cannot send message: Outside chat time")
+            return
+        }
 
         viewModelScope.launch {
             try {
                 val currentUserId = auth.currentUser?.uid ?: return@launch
                 val chatRoom = _chatRoom.value ?: return@launch
-
-                Log.d("ChatViewModel", "ChatRoom data: $chatRoom")
-                Log.d("ChatViewModel", "UserId array: ${chatRoom.userId}")
-                Log.d("ChatViewModel", "Current user: $currentUserId")
 
                 if (chatRoom.userId.isEmpty()) {
                     Log.e("ChatViewModel", "No participants in chat room")
@@ -95,7 +102,6 @@ class ChatViewModel(
                     return@launch
                 }
 
-                // Safe access senderName
                 val senderName = when {
                     chatRoom.userId.size >= 2 && currentUserId == chatRoom.userId[0] -> chatRoom.userName
                     chatRoom.userId.size >= 2 && currentUserId == chatRoom.userId[1] -> chatRoom.psychologistName
@@ -111,14 +117,15 @@ class ChatViewModel(
                     senderName = senderName
                 )
 
-                Log.d("ChatViewModel", "Sending message: $message")
-
                 when (val result = chatRepository.sendMessage(chatRoomId, message)) {
                     is Resource.Success -> {
                         Log.d("ChatViewModel", "Message sent successfully")
                     }
                     is Resource.Error -> {
-                        Log.e("ChatViewModel", "Failed to send message: ${result.message}")
+                        if (result.message.contains("appointment time")) {
+                            _canSendMessage.value = false
+                            _chatTimeStatus.value = result.message
+                        }
                     }
                     else -> {}
                 }
@@ -127,5 +134,62 @@ class ChatViewModel(
                 Log.e("ChatViewModel", "Error sending message", e)
             }
         }
+    }
+
+    private fun checkChatTime() {
+        viewModelScope.launch {
+            val chatRoom = _chatRoom.value ?: return@launch
+            val canSend = isWithinChatTime(chatRoom.startTime, chatRoom.endTime)
+            _canSendMessage.value = canSend
+
+            if (!canSend) {
+                _chatTimeStatus.value = "Chat is only available during appointment time: ${formatChatTime(chatRoom.startTime, chatRoom.endTime)}"
+            } else {
+                _chatTimeStatus.value = ""
+            }
+        }
+    }
+
+    private fun isWithinChatTime(startTime: String?, endTime: String?): Boolean {
+        return try {
+            if (startTime.isNullOrEmpty() || endTime.isNullOrEmpty()) {
+                return true
+            }
+            val currentTime = Date()
+            val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
+
+            val start = sdf.parse(startTime)
+            val end = sdf.parse(endTime)
+
+            if (start != null && end != null) {
+                currentTime.time in start.time..end.time
+            } else {
+                true
+            }
+        } catch (e: Exception) {
+            Log.e("ChatViewModel", "Error parsing chat time", e)
+            true
+        }
+    }
+
+    private fun formatChatTime(startTime: String?, endTime: String?): String {
+        return try {
+            val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
+            val displaySdf = SimpleDateFormat("HH:mm", Locale.getDefault())
+
+            val start = startTime?.let { sdf.parse(it) }
+            val end = endTime?.let { sdf.parse(it) }
+
+            if (start != null && end != null) {
+                "${displaySdf.format(start)} - ${displaySdf.format(end)}"
+            } else {
+                "Not specified"
+            }
+        } catch (e: Exception) {
+            "Invalid time format"
+        }
+    }
+    fun refreshChatTimeStatus() {
+        checkChatTime()
     }
 }
