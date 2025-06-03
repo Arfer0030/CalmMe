@@ -209,8 +209,6 @@ class SubscribeViewModel : ViewModel() {
                 firestore.collection("payments").document(paymentDoc.id)
                     .update("paymentMethod", paymentMethod)
                     .await()
-
-                Log.d("SubscribeVM", "Updated payment method in payments collection")
             }
 
             updateAppointmentsPaymentMethod(userId, paymentMethod)
@@ -218,7 +216,6 @@ class SubscribeViewModel : ViewModel() {
             onSuccess()
         } catch (e: Exception) {
             _isLoading.value = false
-            Log.e("SubscribeVM", "Error updating subscription payment method", e)
             onError("Failed to update subscription payment method: ${e.localizedMessage}")
         }
     }
@@ -348,7 +345,6 @@ class SubscribeViewModel : ViewModel() {
             onSuccess()
         } catch (e: Exception) {
             _isLoading.value = false
-            Log.e("SubscribeVM", "Error finalizing subscription payment", e)
             onError("Failed to finalize subscription payment: ${e.localizedMessage}")
         }
     }

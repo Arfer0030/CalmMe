@@ -139,7 +139,7 @@ fun SpecializationFilter(
     onSpecializationSelected: (String) -> Unit
 ) {
     val specializations = listOf(
-        "All", "Anxiety", "Depression", "Relationship", "Trauma", "Addiction"
+        "All", "Children", "Adult", "Relationship", "Family", "Addiction", "Trauma", "Elderly"
     )
 
     LazyRow(

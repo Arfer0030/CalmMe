@@ -55,7 +55,7 @@ fun EditSecurityScreen(authViewModel: AuthViewModel) {
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    listOf(Color(0xFFF3E7FE), Color(0xFFF7F2F9))
+                    listOf(Color(0xFFF7E7F8), Color.White,Color(0xFFF7E7F8))
                 )
             )
             .padding(24.dp)
@@ -77,7 +77,7 @@ fun EditSecurityScreen(authViewModel: AuthViewModel) {
                             navController.popBackStack()
                         }
                 )
-                Spacer(modifier = Modifier.width(80.dp))
+                Spacer(modifier = Modifier.width(85.dp))
                 Text(
                     text = "Edit Security",
                     style = MaterialTheme.typography.headlineSmall,
@@ -90,28 +90,36 @@ fun EditSecurityScreen(authViewModel: AuthViewModel) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Button(
+                OutlinedButton(
                     onClick = { updateMode = "email" },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (updateMode == "email") Color(0xFF8E44AD) else Color.LightGray
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                    ),
+                    border = BorderStroke(
+                        width = 1.dp,
+                        color = if (updateMode == "email") Color(0xFF8E44AD) else Color.DarkGray
                     ),
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
                         "Update Email",
-                        color = if (updateMode == "email") Color.White else Color.Black
+                        color = if (updateMode == "email") Color(0xFF8E44AD) else Color.Black
                     )
                 }
-                Button(
+                OutlinedButton(
                     onClick = { updateMode = "password" },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (updateMode == "password") Color(0xFF8E44AD) else Color.LightGray
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                    ),
+                    border = BorderStroke(
+                        width = 1.dp,
+                        color = if (updateMode == "password") Color(0xFF8E44AD) else Color.DarkGray
                     ),
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
                         "Update Password",
-                        color = if (updateMode == "password") Color.White else Color.Black
+                        color =if (updateMode == "password") Color(0xFF8E44AD) else Color.Black
                     )
                 }
             }

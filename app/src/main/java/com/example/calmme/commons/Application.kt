@@ -37,10 +37,13 @@ import com.example.calmme.pages.history.HistoryScreen
 import com.example.calmme.pages.home.HomeScreen
 import com.example.calmme.pages.meditate.MeditateScreen
 import com.example.calmme.pages.meditate.MusicScreen
+import com.example.calmme.pages.profile.AboutScreen
 import com.example.calmme.pages.profile.ProfileScreen
 import com.example.calmme.pages.subscribe.SubscribeScreen
 import com.example.calmme.pages.profile.EditProfileScreen
 import com.example.calmme.pages.profile.EditSecurityScreen
+import com.example.calmme.pages.profile.HelpScreen
+import com.example.calmme.pages.profile.PaymentHistoryScreen
 import com.example.calmme.pages.profile.PsiEditProfileScreen
 import com.example.calmme.pages.subscribe.ConfirmationScreen
 import com.example.calmme.pages.subscribe.PaymentScreen
@@ -66,7 +69,7 @@ fun Application(
         val navigationItems = listOf(
             NavigationItem(Routes.Home.route, R.drawable.ic_home, "Home"),
             NavigationItem(Routes.Consultation.route, R.drawable.ic_consul, "Consultation"),
-            NavigationItem(Routes.History.route, R.drawable.ic_history, "History"),
+            NavigationItem(Routes.History.route, R.drawable.ic_chat, "History"),
             NavigationItem(Routes.Profile.route, R.drawable.ic_profile, "Profile")
         )
 
@@ -76,7 +79,7 @@ fun Application(
                 if (shouldShowBottomBar()) {
                     NavigationBar(
                         containerColor = Color(0xffFAF0FB),
-                        tonalElevation = 0.dp,
+                        tonalElevation = 2.dp,
                         modifier = Modifier
                             .padding(2.dp)
                             .height(100.dp)
@@ -89,7 +92,8 @@ fun Application(
                                 icon = {
                                     Icon(
                                         painter = painterResource(id = item.icon),
-                                        contentDescription = item.label
+                                        contentDescription = item.label,
+                                        tint = if (selected) Color(0xFF8E44AD) else Color.Gray
                                     )
                                 },
                                 selected = selected,
@@ -158,7 +162,9 @@ fun Application(
                     val chatRoomId = backStackEntry.arguments?.getString("chatRoomId") ?: ""
                     ChatScreen(chatRoomId = chatRoomId)
                 }
-
+                composable(Routes.Help.route) { HelpScreen() }
+                composable(Routes.About.route) { AboutScreen() }
+                composable(Routes.PaymentHistory.route) { PaymentHistoryScreen() }
             }
         }
     }
@@ -184,6 +190,9 @@ fun shouldShowBottomBar(): Boolean {
         "email_verification/{email}",
         Routes.Chat.route,
         Routes.PsiEditProfile.route,
+        Routes.Help.route,
+        Routes.About.route,
+        Routes.PaymentHistory.route,
     )
 
     return currentRoute != null && currentRoute !in noBottomBarScreens
