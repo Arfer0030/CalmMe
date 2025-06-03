@@ -58,7 +58,6 @@ class AppointmentViewModel(
                     }
                     is Resource.Success -> {
                         _isLoading.value = false
-                        // Filter out booked time slots
                         filterBookedTimeSlots(resource.data, psychologistId, date)
                     }
                     is Resource.Error -> {

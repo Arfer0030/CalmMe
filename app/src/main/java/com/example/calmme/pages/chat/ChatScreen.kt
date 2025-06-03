@@ -23,6 +23,7 @@ import com.example.calmme.R
 import com.example.calmme.commons.LocalNavController
 import com.example.calmme.data.ChatMessage
 import com.google.firebase.Timestamp
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Locale
 import kotlinx.coroutines.launch
@@ -38,12 +39,21 @@ fun ChatScreen(
     val messages by chatViewModel.messages.collectAsState()
     val chatRoom by chatViewModel.chatRoom.collectAsState()
     val currentUserId by chatViewModel.currentUserId.collectAsState()
+    val canSendMessage by chatViewModel.canSendMessage.collectAsState()
+    val chatTimeStatus by chatViewModel.chatTimeStatus.collectAsState()
 
     var messageText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
 
     LaunchedEffect(chatRoomId) {
         chatViewModel.initializeChatWithRoomId(chatRoomId)
+    }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(60000) // 1 menit
+            chatViewModel.refreshChatTimeStatus()
+        }
     }
 
     // Auto scroll ke bawah ketika ada pesan baru
@@ -148,6 +158,24 @@ fun ChatScreen(
             )
         }
 
+        if (!canSendMessage && chatTimeStatus.isNotEmpty()) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFFFE0B2)
+                )
+            ) {
+                Text(
+                    text = chatTimeStatus,
+                    modifier = Modifier.padding(12.dp),
+                    color = Color(0xFFE65100),
+                    fontSize = 14.sp
+                )
+            }
+        }
+
         // Pesan
         LazyColumn(
             modifier = Modifier.weight(1f),
@@ -178,11 +206,19 @@ fun ChatScreen(
                     value = messageText,
                     onValueChange = { messageText = it },
                     modifier = Modifier.weight(1f),
-                    placeholder = { Text("Type your message...") },
+                    placeholder = {
+                        Text(
+                            if (canSendMessage) "Type your message..."
+                            else "Chat not available outside appointment time"
+                        )
+                    },
                     shape = RoundedCornerShape(24.dp),
+                    enabled = canSendMessage,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color(0xFF8E44AD),
-                        unfocusedBorderColor = Color.LightGray
+                        unfocusedBorderColor = Color.LightGray,
+                        disabledBorderColor = Color.LightGray,
+                        disabledTextColor = Color.Gray
                     )
                 )
 
@@ -190,15 +226,16 @@ fun ChatScreen(
 
                 Button(
                     onClick = {
-                        if (messageText.isNotBlank()) {
+                        if (messageText.isNotBlank() && canSendMessage) {
                             chatViewModel.sendMessage(messageText)
                             messageText = ""
                         }
                     },
                     modifier = Modifier.size(48.dp),
                     shape = CircleShape,
+                    enabled = canSendMessage,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF8E44AD)
+                        containerColor = if (canSendMessage) Color(0xFF8E44AD) else Color.LightGray
                     ),
                     contentPadding = PaddingValues(0.dp)
                 ) {
