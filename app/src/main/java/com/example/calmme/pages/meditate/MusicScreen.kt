@@ -1,6 +1,7 @@
 package com.example.calmme.pages.meditate
 
 import android.media.MediaPlayer
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -40,8 +41,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.calmme.R
 import com.example.calmme.commons.Routes
+import com.example.calmme.pages.authentication.AuthViewModel
 import kotlinx.coroutines.delay
 
 data class MusicData(
@@ -61,7 +65,8 @@ val musicList = listOf(
 @Composable
 fun MusicScreen(
     navController: NavController,
-    initialAudioRes: Int
+    initialAudioRes: Int,
+    authViewModel: AuthViewModel
 ) {
     val context = LocalContext.current
     val initialIndex = remember {
@@ -75,6 +80,7 @@ fun MusicScreen(
     var currentPosition by remember { mutableStateOf(0) }
     var duration by remember { mutableStateOf(currentMusic.durationMs) }
     var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
+    var profilePictureUrl by remember { mutableStateOf<String?>(null) }
 
     fun cleanupMediaPlayer() {
         try {
@@ -163,6 +169,17 @@ fun MusicScreen(
         }
     }
 
+    LaunchedEffect(Unit) {
+        authViewModel.getProfilePictureUrl(
+            onSuccess = { url ->
+                profilePictureUrl = url
+            },
+            onError = { error ->
+                Log.e("TopBar", "Failed to load profile picture: $error")
+            }
+        )
+    }
+
     BackHandler {
         handleBackNavigation()
     }
@@ -190,7 +207,7 @@ fun MusicScreen(
                     painter = painterResource(id = R.drawable.ic_back),
                     contentDescription = "Back",
                     modifier = Modifier
-                        .size(28.dp)
+                        .size(24.dp)
                         .clickable {
                             handleBackNavigation()
                         }
@@ -203,12 +220,19 @@ fun MusicScreen(
                     textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.weight(1f))
-                Icon(
-                    painter = painterResource(id = R.drawable.profile),
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(profilePictureUrl)
+                        .crossfade(true)
+                        .build(),
                     contentDescription = "Profile",
                     modifier = Modifier
-                        .size(28.dp)
-                        .clip(CircleShape)
+                        .size(32.dp)
+                        .clip(CircleShape),
+                    placeholder = painterResource(id = R.drawable.profile),
+                    error = painterResource(id = R.drawable.profile),
+                    fallback = painterResource(id = R.drawable.profile),
+                    contentScale = ContentScale.Crop
                 )
             }
 

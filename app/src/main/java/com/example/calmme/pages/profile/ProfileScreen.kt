@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -14,12 +13,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.calmme.R
 import com.example.calmme.commons.LocalNavController
 import com.example.calmme.commons.Routes
@@ -35,12 +37,15 @@ fun ProfileScreen(authViewModel: AuthViewModel) {
     var username by remember { mutableStateOf("Loading...") }
     var email by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(true) }
+    var profilePictureUrl by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         authViewModel.getUserData(
             onSuccess = { userData ->
                 username = userData["username"] as? String ?: "User"
                 email = userData["email"] as? String ?: ""
+                profilePictureUrl = userData["profilePicture"] as? String
                 isLoading = false
             },
             onError = { error ->
@@ -91,12 +96,21 @@ fun ProfileScreen(authViewModel: AuthViewModel) {
             item { Spacer(modifier = Modifier.height(16.dp)) }
 
             item {
-                Image(
-                    painter = painterResource(id = R.drawable.profile),
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(profilePictureUrl)
+                        .crossfade(true)
+                        .build(),
                     contentDescription = "Profile Picture",
                     modifier = Modifier
-                        .size(100.dp)
-                        .background(Color.Gray, CircleShape)
+                        .size(115.dp)
+                        .clip(RoundedCornerShape(55.dp))
+                        .clickable {
+                            navController.navigate(Routes.Profile.route)
+                        },
+                    placeholder = painterResource(id = R.drawable.profile),
+                    error = painterResource(id = R.drawable.profile),
+                    fallback = painterResource(id = R.drawable.profile)
                 )
             }
 

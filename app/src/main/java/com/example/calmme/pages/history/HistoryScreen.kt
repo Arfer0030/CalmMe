@@ -34,12 +34,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.calmme.R
 import com.example.calmme.commons.LocalNavController
 import com.example.calmme.commons.Routes
@@ -55,41 +58,44 @@ fun HistoryScreen(
     val isLoading by historyViewModel.isLoading.collectAsState()
     val participantNames by historyViewModel.participantNames.collectAsState()
     val participantEmails by historyViewModel.participantEmails.collectAsState()
+    val participantProfilePictures by historyViewModel.participantProfilePictures.collectAsState() // ✅ Profile pictures
+    val currentUserProfilePicture by historyViewModel.currentUserProfilePicture.collectAsState() // ✅ Current user profile
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    listOf(Color(0xFFF7E7F8), Color.White,Color(0xFFF7E7F8))
+                    listOf(Color(0xFFF7E7F8), Color.White, Color(0xFFF7E7F8))
                 )
             )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp)
+                .padding(16.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.spacedBy(60.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_back),
-                    contentDescription = "Back",
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(currentUserProfilePicture)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = "Profile",
                     modifier = Modifier
-                        .size(24.dp)
-                        .clickable { navController.popBackStack() }
+                        .size(45.dp)
+                        .clip(CircleShape),
+                    placeholder = painterResource(id = R.drawable.profile),
+                    error = painterResource(id = R.drawable.profile),
+                    fallback = painterResource(id = R.drawable.profile)
                 )
                 Text(
                     text = "My Appointment",
                     style = MaterialTheme.typography.headlineSmall,
-                )
-                Icon(
-                    painter = painterResource(id = R.drawable.profile),
-                    contentDescription = "Profile",
-                    modifier = Modifier.size(24.dp)
                 )
             }
 
@@ -111,6 +117,7 @@ fun HistoryScreen(
                             appointment = appointment,
                             participantName = participantNames[appointment.appointmentId] ?: "",
                             participantEmail = participantEmails[appointment.appointmentId] ?: "",
+                            participantProfilePicture = participantProfilePictures[appointment.appointmentId], // ✅ Pass profile picture
                             onChatClick = { appointmentId, chatRoomId ->
                                 if (!chatRoomId.isNullOrEmpty()) {
                                     navController.navigate(Routes.Chat.createRoute(chatRoomId))
@@ -120,9 +127,7 @@ fun HistoryScreen(
                                         psychologistId = appointment.psychologistId,
                                         onSuccess = { newChatRoomId ->
                                             navController.navigate(
-                                                Routes.Chat.createRoute(
-                                                    newChatRoomId
-                                                )
+                                                Routes.Chat.createRoute(newChatRoomId)
                                             )
                                         },
                                         onError = { error ->
@@ -143,13 +148,17 @@ fun HistoryScreen(
     }
 }
 
+
 @Composable
 fun AppointmentCard(
     appointment: AppointmentData,
     participantName: String,
     participantEmail: String,
+    participantProfilePicture: String?, // ✅ Tambahkan parameter profile picture
     onChatClick: (String, String?) -> Unit
 ) {
+    val context = LocalContext.current
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -181,19 +190,21 @@ fun AppointmentCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    Box(
+                    // ✅ Profile picture dengan Coil dan fallback
+                    AsyncImage(
+                        model = ImageRequest.Builder(context)
+                            .data(participantProfilePicture)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = "Profile",
                         modifier = Modifier
                             .size(40.dp)
-                            .clip(CircleShape)
-                            .background(Color.Gray),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.profile),
-                            contentDescription = "Profile",
-                            modifier = Modifier.size(24.dp),
-                        )
-                    }
+                            .clip(CircleShape),
+                        placeholder = painterResource(id = R.drawable.profile),
+                        error = painterResource(id = R.drawable.profile),
+                        fallback = painterResource(id = R.drawable.profile),
+                        contentScale = ContentScale.Crop
+                    )
 
                     Spacer(modifier = Modifier.width(12.dp))
 
@@ -211,6 +222,7 @@ fun AppointmentCard(
                     }
                 }
 
+                // ... rest of the card content remains the same
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Row(

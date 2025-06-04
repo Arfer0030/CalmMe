@@ -6,9 +6,12 @@ import com.example.calmme.commons.Resource
 import com.example.calmme.data.PsikologRepository
 import com.example.calmme.data.PsychologistData
 import com.example.calmme.data.TimeSlot
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -16,6 +19,9 @@ import java.util.Locale
 class ConsultationViewModel(
     private val repository: PsikologRepository = PsikologRepository()
 ) : ViewModel() {
+
+    private val auth = FirebaseAuth.getInstance()
+    private val firestore = FirebaseFirestore.getInstance()
 
     private val _psychologists = MutableStateFlow<List<PsychologistData>>(emptyList())
 
@@ -35,8 +41,28 @@ class ConsultationViewModel(
 
     private val _psychologistTimeSlots = MutableStateFlow<Map<String, List<TimeSlot>>>(emptyMap())
 
+    private val _currentUserProfilePicture = MutableStateFlow<String?>(null)
+    val currentUserProfilePicture: StateFlow<String?> = _currentUserProfilePicture
+
+    private val _psychologistProfilePictures = MutableStateFlow<Map<String, String?>>(emptyMap())
+    val psychologistProfilePictures: StateFlow<Map<String, String?>> = _psychologistProfilePictures
+
     init {
         loadPsychologists()
+        loadCurrentUserProfile()
+    }
+
+    private fun loadCurrentUserProfile() {
+        viewModelScope.launch {
+            try {
+                val userId = auth.currentUser?.uid ?: return@launch
+                val userDoc = firestore.collection("users").document(userId).get().await()
+                val profilePicture = userDoc.getString("profilePicture")
+                _currentUserProfilePicture.value = profilePicture
+            } catch (e: Exception) {
+                //
+            }
+        }
     }
 
     private fun loadPsychologists() {
@@ -52,6 +78,7 @@ class ConsultationViewModel(
                         _psychologists.value = resource.data
                         _filteredPsychologists.value = resource.data
                         loadTodayTimeSlotsForAllPsychologists(resource.data)
+                        loadPsychologistProfilePictures(resource.data)
                     }
                     is Resource.Error -> {
                         _isLoading.value = false
@@ -59,6 +86,32 @@ class ConsultationViewModel(
                     }
                 }
             }
+        }
+    }
+
+    private fun loadPsychologistProfilePictures(psychologists: List<PsychologistData>) {
+        viewModelScope.launch {
+            val profilePicturesMap = mutableMapOf<String, String?>()
+
+            psychologists.forEach { psychologist ->
+                try {
+                    val psychologistDoc = firestore.collection("psychologists")
+                        .document(psychologist.psychologistId).get().await()
+                    val userId = psychologistDoc.getString("userId")
+
+                    if (!userId.isNullOrEmpty()) {
+                        val userDoc = firestore.collection("users").document(userId).get().await()
+                        val profilePicture = userDoc.getString("profilePicture")
+                        profilePicturesMap[psychologist.psychologistId] = profilePicture
+                    } else {
+                        profilePicturesMap[psychologist.psychologistId] = null
+                    }
+                } catch (e: Exception) {
+                    profilePicturesMap[psychologist.psychologistId] = null
+                }
+            }
+
+            _psychologistProfilePictures.value = profilePicturesMap
         }
     }
 
@@ -106,6 +159,7 @@ class ConsultationViewModel(
                         _isLoading.value = false
                         _psychologists.value = resource.data
                         _filteredPsychologists.value = resource.data
+                        loadPsychologistProfilePictures(resource.data)
                     }
                     is Resource.Error -> {
                         _isLoading.value = false

@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import com.example.calmme.commons.Resource
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 
 class ChatViewModel(
@@ -20,6 +22,7 @@ class ChatViewModel(
 ) : ViewModel() {
 
     private val auth = FirebaseAuth.getInstance()
+    private val firestore = FirebaseFirestore.getInstance()
 
     private val _messages = MutableStateFlow<List<ChatMessage>>(emptyList())
     val messages: StateFlow<List<ChatMessage>> = _messages
@@ -41,8 +44,57 @@ class ChatViewModel(
     private val _chatTimeStatus = MutableStateFlow("")
     val chatTimeStatus: StateFlow<String> = _chatTimeStatus
 
+    private val _otherUserProfilePicture = MutableStateFlow<String?>(null)
+    val otherUserProfilePicture: StateFlow<String?> = _otherUserProfilePicture
+
+    private val _currentUserProfilePicture = MutableStateFlow<String?>(null)
+    val currentUserProfilePicture: StateFlow<String?> = _currentUserProfilePicture
+
+    private val _userProfilePictures = MutableStateFlow<Map<String, String?>>(emptyMap())
+    val userProfilePictures: StateFlow<Map<String, String?>> = _userProfilePictures
+
     init {
         _currentUserId.value = auth.currentUser?.uid ?: ""
+        loadCurrentUserProfile()
+    }
+
+    private fun loadCurrentUserProfile() {
+        viewModelScope.launch {
+            try {
+                val userId = auth.currentUser?.uid ?: return@launch
+                val userDoc = firestore.collection("users").document(userId).get().await()
+                val profilePicture = userDoc.getString("profilePicture")
+                _currentUserProfilePicture.value = profilePicture
+            } catch (e: Exception) {
+                Log.e("ChatViewModel", "Error loading current user profile", e)
+            }
+        }
+    }
+
+    private fun loadChatRoomProfilePictures() {
+        viewModelScope.launch {
+            val chatRoom = _chatRoom.value ?: return@launch
+            val currentUserId = auth.currentUser?.uid ?: return@launch
+            val profilePicturesMap = mutableMapOf<String, String?>()
+
+            try {
+                chatRoom.userId.forEach { userId ->
+                    val userDoc = firestore.collection("users").document(userId).get().await()
+                    val profilePicture = userDoc.getString("profilePicture")
+                    profilePicturesMap[userId] = profilePicture
+                }
+
+                _userProfilePictures.value = profilePicturesMap
+
+                val otherUserId = chatRoom.userId.firstOrNull { it != currentUserId }
+                if (otherUserId != null) {
+                    _otherUserProfilePicture.value = profilePicturesMap[otherUserId]
+                }
+
+            } catch (e: Exception) {
+                Log.e("ChatViewModel", "Error loading chat room profile pictures", e)
+            }
+        }
     }
 
     fun initializeChatWithRoomId(roomId: String) {
@@ -57,6 +109,7 @@ class ChatViewModel(
                 is Resource.Success -> {
                     _chatRoom.value = result.data
                     checkChatTime()
+                    loadChatRoomProfilePictures()
                 }
                 is Resource.Error -> {
                     Log.e("ChatViewModel", "Failed to load chat room: ${result.message}")
