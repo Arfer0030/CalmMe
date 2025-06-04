@@ -1,25 +1,54 @@
 package com.example.calmme.pages.consultation
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.calmme.R
 import com.example.calmme.commons.LocalNavController
 import com.example.calmme.commons.Routes
@@ -31,6 +60,8 @@ fun ConsultationScreen(consultationViewModel: ConsultationViewModel) {
     val filteredPsychologists by consultationViewModel.filteredPsychologists.collectAsState()
     val isLoading by consultationViewModel.isLoading.collectAsState()
     val errorMessage by consultationViewModel.errorMessage.collectAsState()
+    val currentUserProfilePicture by consultationViewModel.currentUserProfilePicture.collectAsState()
+    val psychologistProfilePictures by consultationViewModel.psychologistProfilePictures.collectAsState()
 
     var searchText by remember { mutableStateOf("") }
     var selectedSpecialization by remember { mutableStateOf("") }
@@ -45,7 +76,7 @@ fun ConsultationScreen(consultationViewModel: ConsultationViewModel) {
             )
             .padding(16.dp)
     ) {
-        ConsulHeader()
+        ConsulHeader(currentUserProfilePicture = currentUserProfilePicture)
         Spacer(modifier = Modifier.height(12.dp))
         SearchBar(
             searchText = searchText,
@@ -67,13 +98,16 @@ fun ConsultationScreen(consultationViewModel: ConsultationViewModel) {
             psychologists = filteredPsychologists,
             consultationViewModel = consultationViewModel,
             isLoading = isLoading,
-            errorMessage = errorMessage
+            errorMessage = errorMessage,
+            psychologistProfilePictures = psychologistProfilePictures
         )
     }
 }
 
 @Composable
-fun ConsulHeader() {
+fun ConsulHeader(currentUserProfilePicture: String?) {
+    val context = LocalContext.current
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -85,10 +119,19 @@ fun ConsulHeader() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Image(
-                    painter = painterResource(id = R.drawable.profile),
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(currentUserProfilePicture)
+                        .crossfade(true)
+                        .build(),
                     contentDescription = "Profile",
-                    modifier = Modifier.size(42.dp)
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(CircleShape),
+                    placeholder = painterResource(id = R.drawable.profile),
+                    error = painterResource(id = R.drawable.profile),
+                    fallback = painterResource(id = R.drawable.profile),
+                    contentScale = ContentScale.Crop
                 )
                 Spacer(modifier = Modifier.width(85.dp))
                 Text(
@@ -104,6 +147,7 @@ fun ConsulHeader() {
         )
     }
 }
+
 
 @Composable
 fun SearchBar(
@@ -169,7 +213,8 @@ fun TopPsychologistsSection(
     psychologists: List<PsychologistData>,
     consultationViewModel: ConsultationViewModel,
     isLoading: Boolean,
-    errorMessage: String?
+    errorMessage: String?,
+    psychologistProfilePictures: Map<String, String?>
 ) {
     Column {
         Row(
@@ -235,7 +280,11 @@ fun TopPsychologistsSection(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(psychologists) { psychologist ->
-                        PsychologistCard(psychologist, consultationViewModel)
+                        PsychologistCard(
+                            psychologist = psychologist,
+                            consultationViewModel = consultationViewModel,
+                            profilePictureUrl = psychologistProfilePictures[psychologist.psychologistId]
+                        )
                     }
                 }
             }
@@ -243,12 +292,15 @@ fun TopPsychologistsSection(
     }
 }
 
+
 @Composable
 fun PsychologistCard(
     psychologist: PsychologistData,
-    consultationViewModel: ConsultationViewModel
+    consultationViewModel: ConsultationViewModel,
+    profilePictureUrl: String?
 ) {
     val navController = LocalNavController.current
+    val context = LocalContext.current
     val todayTimeSlots = consultationViewModel.getTodayTimeSlotsForPsychologist(psychologist.psychologistId)
 
     Card(
@@ -275,19 +327,20 @@ fun PsychologistCard(
                 modifier = Modifier.padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(profilePictureUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = "Psychologist Profile",
                     modifier = Modifier
                         .size(58.dp)
-                        .background(Color(0xFF8E44AD), CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = psychologist.getInitials(),
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                        .clip(CircleShape),
+                    placeholder = painterResource(id = R.drawable.profile),
+                    error = painterResource(id = R.drawable.profile),
+                    fallback = painterResource(id = R.drawable.profile),
+                    contentScale = ContentScale.Crop
+                )
 
                 Spacer(modifier = Modifier.width(12.dp))
 
@@ -306,7 +359,6 @@ fun PsychologistCard(
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-
                         TodayTimeSlotsDisplay(timeSlots = todayTimeSlots)
                     }
 
@@ -338,6 +390,7 @@ fun PsychologistCard(
         }
     }
 }
+
 
 @Composable
 fun TodayTimeSlotsDisplay(timeSlots: List<TimeSlot>) {
@@ -376,14 +429,6 @@ fun TodayTimeSlotsDisplay(timeSlots: List<TimeSlot>) {
             )
         }
     }
-}
-
-fun PsychologistData.getInitials(): String {
-    return name.split(" ")
-        .mapNotNull { it.firstOrNull()?.toString() }
-        .take(2)
-        .joinToString("")
-        .uppercase()
 }
 
 fun PsychologistData.getSpecializationText(): String {

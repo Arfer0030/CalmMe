@@ -14,11 +14,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.calmme.R
 import com.example.calmme.commons.LocalNavController
 import com.example.calmme.data.ChatMessage
@@ -34,6 +38,7 @@ fun ChatScreen(
     chatRoomId: String,
     chatViewModel: ChatViewModel = viewModel()
 ) {
+    val context = LocalContext.current
     val navController = LocalNavController.current
     val coroutineScope = rememberCoroutineScope()
     val messages by chatViewModel.messages.collectAsState()
@@ -41,6 +46,7 @@ fun ChatScreen(
     val currentUserId by chatViewModel.currentUserId.collectAsState()
     val canSendMessage by chatViewModel.canSendMessage.collectAsState()
     val chatTimeStatus by chatViewModel.chatTimeStatus.collectAsState()
+    val otherUserProfilePicture by chatViewModel.otherUserProfilePicture.collectAsState()
 
     var messageText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
@@ -98,21 +104,20 @@ fun ChatScreen(
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // Profile picture
-                Box(
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(otherUserProfilePicture)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = "Other User Profile",
                     modifier = Modifier
                         .size(40.dp)
-                        .clip(CircleShape)
-                        .background(Color.Gray),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.profile),
-                        contentDescription = "Profile",
-                        modifier = Modifier.size(24.dp),
-                        tint = Color.White
-                    )
-                }
+                        .clip(CircleShape),
+                    placeholder = painterResource(id = R.drawable.profile),
+                    error = painterResource(id = R.drawable.profile),
+                    fallback = painterResource(id = R.drawable.profile),
+                    contentScale = ContentScale.Crop
+                )
 
                 Spacer(modifier = Modifier.width(12.dp))
 

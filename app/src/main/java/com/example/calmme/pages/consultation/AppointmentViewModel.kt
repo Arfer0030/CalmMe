@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.calmme.data.PsikologRepository
 import com.example.calmme.commons.Resource
 import com.example.calmme.data.AppointmentData
+import com.example.calmme.data.PsychologistData
 import com.example.calmme.data.ScheduleData
 import com.example.calmme.data.TimeSlot
 import com.google.firebase.auth.FirebaseAuth
@@ -45,6 +46,56 @@ class AppointmentViewModel(
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
+
+    private val _selectedPsychologist = MutableStateFlow<PsychologistData?>(null)
+    val selectedPsychologist: StateFlow<PsychologistData?> = _selectedPsychologist
+
+    private val _selectedPsychologistProfilePicture = MutableStateFlow<String?>(null)
+    val selectedPsychologistProfilePicture: StateFlow<String?> = _selectedPsychologistProfilePicture
+
+    private val _currentUserProfilePicture = MutableStateFlow<String?>(null)
+    val currentUserProfilePicture: StateFlow<String?> = _currentUserProfilePicture
+
+    init {
+        loadCurrentUserProfile()
+    }
+
+    private fun loadCurrentUserProfile() {
+        viewModelScope.launch {
+            try {
+                val userId = auth.currentUser?.uid ?: return@launch
+                val userDoc = firestore.collection("users").document(userId).get().await()
+                val profilePicture = userDoc.getString("profilePicture")
+                _currentUserProfilePicture.value = profilePicture
+            } catch (e: Exception) {
+                //
+            }
+        }
+    }
+
+    fun loadSelectedPsychologistProfile(psychologistId: String) {
+        viewModelScope.launch {
+            try {
+                val psychologistDoc = firestore.collection("psychologists")
+                    .document(psychologistId).get().await()
+                val userId = psychologistDoc.getString("userId")
+
+                if (!userId.isNullOrEmpty()) {
+                    val userDoc = firestore.collection("users").document(userId).get().await()
+                    val profilePicture = userDoc.getString("profilePicture")
+                    _selectedPsychologistProfilePicture.value = profilePicture
+                }
+            } catch (e: Exception) {
+                //
+            }
+        }
+    }
+
+    fun setSelectedPsychologist(psychologist: PsychologistData) {
+        _selectedPsychologist.value = psychologist
+        loadSelectedPsychologistProfile(psychologist.psychologistId)
+        loadPsychologistSchedule(psychologist.psychologistId)
+    }
 
     // Fungsi buat load timeslot yang tersedia (belom dipesan)
     fun loadAvailableTimeSlots(psychologistId: String, date: String) {

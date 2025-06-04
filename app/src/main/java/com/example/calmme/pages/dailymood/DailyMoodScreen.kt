@@ -1,6 +1,7 @@
 package com.example.calmme.pages.dailymood
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -25,22 +26,31 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.calmme.R
 import com.example.calmme.commons.LocalNavController
+import com.example.calmme.pages.authentication.AuthViewModel
 import kotlinx.serialization.Serializable
 
 @Composable
-fun DailyMoodScreen(dailyMoodViewModel: DailyMoodViewModel) {
+fun DailyMoodScreen(dailyMoodViewModel: DailyMoodViewModel, authViewModel: AuthViewModel) {
     val selectedPeriod = remember { mutableStateOf("Week") }
 
     Column(
@@ -53,7 +63,7 @@ fun DailyMoodScreen(dailyMoodViewModel: DailyMoodViewModel) {
             )
             .padding(14.dp)
     ) {
-        TopBar()
+        TopBar(authViewModel)
         Spacer(modifier = Modifier.height(20.dp))
         MoodStreakSection(dailyMoodViewModel = dailyMoodViewModel)
         Spacer(modifier = Modifier.height(26.dp))
@@ -68,8 +78,22 @@ fun DailyMoodScreen(dailyMoodViewModel: DailyMoodViewModel) {
 }
 
 @Composable
-fun TopBar() {
+fun TopBar(authViewModel: AuthViewModel) {
     val navController = LocalNavController.current
+    val context = LocalContext.current
+    var profilePictureUrl by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(Unit) {
+        authViewModel.getProfilePictureUrl(
+            onSuccess = { url ->
+                profilePictureUrl = url
+            },
+            onError = { error ->
+                Log.e("TopBar", "Failed to load profile picture: $error")
+            }
+        )
+    }
+
     Row(
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -83,13 +107,24 @@ fun TopBar() {
             }
         )
         Text("Daily Mood Tracker", style = MaterialTheme.typography.headlineSmall)
-        Icon(
-            painter = painterResource(id = R.drawable.profile),
+
+        AsyncImage(
+            model = ImageRequest.Builder(context)
+                .data(profilePictureUrl)
+                .crossfade(true)
+                .build(),
             contentDescription = "Profile",
-            modifier = Modifier.size(32.dp)
+            modifier = Modifier
+                .size(32.dp)
+                .clip(CircleShape),
+            placeholder = painterResource(id = R.drawable.profile),
+            error = painterResource(id = R.drawable.profile),
+            fallback = painterResource(id = R.drawable.profile),
+            contentScale = ContentScale.Crop
         )
     }
 }
+
 
 @SuppressLint("StateFlowValueCalledInComposition")
 @Composable

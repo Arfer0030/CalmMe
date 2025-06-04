@@ -45,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -53,6 +54,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.calmme.R
 import com.example.calmme.commons.LocalNavController
 import com.example.calmme.commons.Routes
@@ -82,6 +85,9 @@ fun AppointmentScreen(
     val selectedMethod by appointmentViewModel.selectedConsultationMethod.collectAsState()
     val isLoading by appointmentViewModel.isLoading.collectAsState()
     val errorMessage by appointmentViewModel.errorMessage.collectAsState()
+    val selectedPsychologist by consultationViewModel.selectedPsychologist.collectAsState()
+    val selectedPsychologistProfilePicture by appointmentViewModel.selectedPsychologistProfilePicture.collectAsState()
+    val currentUserProfilePicture by appointmentViewModel.currentUserProfilePicture.collectAsState()
 
     var showDatePicker by remember { mutableStateOf(false) }
 
@@ -95,6 +101,13 @@ fun AppointmentScreen(
     } else LaunchedEffect(psychologist) {
         psychologist?.let { psych ->
             appointmentViewModel.loadPsychologistSchedule(psych.psychologistId)
+        }
+    }
+
+    // Load selected psikolognya
+    LaunchedEffect(selectedPsychologist) {
+        selectedPsychologist?.let { psychologist ->
+            appointmentViewModel.setSelectedPsychologist(psychologist)
         }
     }
 
@@ -119,12 +132,16 @@ fun AppointmentScreen(
             .background(Color.LightGray)
     ) {
         item {
-            AppointmentTopBar(navController)
+            AppointmentHeader(
+                currentUserProfilePicture = currentUserProfilePicture
+            )
         }
         item {
-            Spacer(modifier = Modifier.height(20.dp))
-            PsychologistImageSection(psychologist!!)
-            Spacer(modifier = Modifier.height(50.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+            PsychologistImageSection(
+                psychologist = psychologist!!,
+                profilePictureUrl = selectedPsychologistProfilePicture
+            )
         }
         item {
             AppointmentInfoCard(
@@ -178,59 +195,68 @@ fun AppointmentScreen(
     }
 }
 
-// Bagian top bar screen
+// Bagian topbar
 @Composable
-fun AppointmentTopBar(navController: NavController) {
+fun AppointmentHeader(currentUserProfilePicture: String?) {
+    val navController = LocalNavController.current
+    val context = LocalContext.current
+
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(20.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        modifier = Modifier.fillMaxWidth().padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             painter = painterResource(id = R.drawable.ic_back),
             contentDescription = "Back",
             modifier = Modifier
                 .size(24.dp)
-                .clickable {
-                    navController.popBackStack()
-                }
+                .clickable { navController.popBackStack() }
         )
         Text(
-            text = "Consultation",
+            text = "Book Appointment",
             style = MaterialTheme.typography.headlineSmall
         )
-        Image(
-            painter = painterResource(id = R.drawable.profile),
+        AsyncImage(
+            model = ImageRequest.Builder(context)
+                .data(currentUserProfilePicture)
+                .crossfade(true)
+                .build(),
             contentDescription = "Profile",
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier
+                .size(32.dp)
+                .clip(CircleShape),
+            placeholder = painterResource(id = R.drawable.profile),
+            error = painterResource(id = R.drawable.profile),
+            fallback = painterResource(id = R.drawable.profile),
+            contentScale = ContentScale.Crop
         )
     }
 }
 
+
 // Bagian gambar psikolog
 @Composable
-fun PsychologistImageSection(psychologist: PsychologistData) {
+fun PsychologistImageSection(psychologist: PsychologistData,  profilePictureUrl: String?) {
+    val context = LocalContext.current
     Box(
         modifier = Modifier
             .fillMaxWidth(),
         contentAlignment = Alignment.Center
     ) {
-        // Placeholder for psychologist image
-        Box(
+        AsyncImage(
+            model = ImageRequest.Builder(context)
+                .data(profilePictureUrl)
+                .crossfade(true)
+                .build(),
+            contentDescription = "Psychologist Profile",
             modifier = Modifier
-                .size(100.dp)
-                .background(Color(0xFF8E44AD), CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = psychologist.getInitials(),
-                color = Color.White,
-                fontSize = 36.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
+                .size(200.dp),
+            placeholder = painterResource(id = R.drawable.profile),
+            error = painterResource(id = R.drawable.profile),
+            fallback = painterResource(id = R.drawable.profile),
+            contentScale = ContentScale.Crop
+        )
     }
 }
 

@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -48,8 +47,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.calmme.R
 import com.example.calmme.commons.LocalNavController
+import com.example.calmme.commons.Routes
 import com.example.calmme.pages.authentication.AuthViewModel
 import kotlinx.coroutines.launch
 import java.util.Calendar
@@ -69,12 +71,14 @@ fun EditProfileScreen(authViewModel: AuthViewModel) {
     var originalUsername by remember { mutableStateOf("") }
     var originalGender by remember { mutableStateOf("") }
     var originalDateOfBirth by remember { mutableStateOf("") }
+    var profilePictureUrl by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         authViewModel.getUserData(
             onSuccess = { userData ->
                 username = userData["username"] as? String ?: ""
                 email = userData["email"] as? String ?: ""
+                profilePictureUrl = userData["profilePicture"] as? String
                 gender = userData["gender"] as? String ?: "male"
                 dateOfBirth = userData["dateOfBirth"] as? String ?: ""
                 userRole = userData["role"] as? String ?: "user"
@@ -124,13 +128,21 @@ fun EditProfileScreen(authViewModel: AuthViewModel) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Image(
-                painter = painterResource(id = R.drawable.profile),
+            AsyncImage(
+                model = ImageRequest.Builder(context)
+                    .data(profilePictureUrl)
+                    .crossfade(true)
+                    .build(),
                 contentDescription = "Profile Picture",
                 modifier = Modifier
-                    .size(100.dp)
-                    .clip(CircleShape)
-                    .background(Color.Gray)
+                    .size(115.dp)
+                    .clip(RoundedCornerShape(55.dp))
+                    .clickable {
+                        navController.navigate(Routes.Profile.route)
+                    },
+                placeholder = painterResource(id = R.drawable.profile),
+                error = painterResource(id = R.drawable.profile),
+                fallback = painterResource(id = R.drawable.profile)
             )
 
             Spacer(modifier = Modifier.height(32.dp))

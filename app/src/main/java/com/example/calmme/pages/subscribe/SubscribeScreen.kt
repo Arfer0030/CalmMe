@@ -1,11 +1,13 @@
 package com.example.calmme.pages.subscribe
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -14,15 +16,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.calmme.R
 import com.example.calmme.commons.LocalNavController
 import com.example.calmme.commons.Routes
+import com.example.calmme.pages.authentication.AuthViewModel
 import kotlinx.coroutines.launch
 
 data class SubscriptionPlan(
@@ -35,8 +41,9 @@ data class SubscriptionPlan(
 )
 
 @Composable
-fun SubscribeScreen(viewModel: SubscribeViewModel) {
+fun SubscribeScreen(viewModel: SubscribeViewModel, authViewModel: AuthViewModel) {
     val navController = LocalNavController.current
+    var profilePictureUrl by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     var selectedPlan by remember { mutableStateOf("") }
@@ -60,6 +67,16 @@ fun SubscribeScreen(viewModel: SubscribeViewModel) {
         )
     )
 
+    LaunchedEffect(Unit) {
+        authViewModel.getProfilePictureUrl(
+            onSuccess = { url ->
+                profilePictureUrl = url
+            },
+            onError = { error ->
+                Log.e("TopBar", "Failed to load profile picture: $error")
+            }
+        )
+    }
 
     Box(
         modifier = Modifier
@@ -90,10 +107,19 @@ fun SubscribeScreen(viewModel: SubscribeViewModel) {
                     text = "Subscribe",
                     style = MaterialTheme.typography.headlineSmall,
                 )
-                Icon(
-                    painter = painterResource(id = R.drawable.profile),
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(profilePictureUrl)
+                        .crossfade(true)
+                        .build(),
                     contentDescription = "Profile",
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape),
+                    placeholder = painterResource(id = R.drawable.profile),
+                    error = painterResource(id = R.drawable.profile),
+                    fallback = painterResource(id = R.drawable.profile),
+                    contentScale = ContentScale.Crop
                 )
             }
 

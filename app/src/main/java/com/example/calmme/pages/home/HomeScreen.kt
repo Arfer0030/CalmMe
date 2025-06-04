@@ -43,9 +43,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.calmme.R
 import com.example.calmme.commons.LocalNavController
 import com.example.calmme.commons.Routes
@@ -57,6 +60,7 @@ import com.example.calmme.pages.authentication.AuthViewModel
 import com.example.calmme.pages.dailymood.DailyMoodViewModel
 import com.google.firebase.auth.FirebaseAuth
 import java.util.Calendar
+
 
 @Composable
 fun HomeScreen(
@@ -121,14 +125,18 @@ fun HomeHeader(username: String, modifier: Modifier = Modifier, authViewModel: A
     val navController = LocalNavController.current
     var userData by remember { mutableStateOf<Map<String, Any>>(emptyMap()) }
     var actualUsername by remember { mutableStateOf(username) }
+    var profilePictureUrl by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         authViewModel.getUserData(
             onSuccess = { data ->
                 userData = data
                 actualUsername = data["username"] as? String ?: username
+                profilePictureUrl = data["profilePicture"] as? String
             },
             onError = {
+
             }
         )
     }
@@ -143,13 +151,21 @@ fun HomeHeader(username: String, modifier: Modifier = Modifier, authViewModel: A
                 verticalAlignment = Alignment.Top,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.profile),
-                    contentDescription = "Profile",
-                    modifier.size(72.dp)
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(profilePictureUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = "Profile Picture",
+                    modifier = Modifier
+                        .size(72.dp)
+                        .clip(RoundedCornerShape(36.dp))
                         .clickable {
                             navController.navigate(Routes.Profile.route)
-                        }
+                        },
+                    placeholder = painterResource(id = R.drawable.profile),
+                    error = painterResource(id = R.drawable.profile),
+                    fallback = painterResource(id = R.drawable.profile)
                 )
                 Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
                     Text(getGreeting(), style = MaterialTheme.typography.bodyLarge)

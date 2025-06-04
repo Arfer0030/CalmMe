@@ -159,6 +159,7 @@ class AuthViewModel : ViewModel() {
                                                 "subscriptionStartDate" to "",
                                                 "subscriptionEndDate" to "",
                                                 "emailVerified" to false,
+                                                "profilePicture" to "",
                                                 "createdAt" to Timestamp.now(),
                                                 "updatedAt" to Timestamp.now()
                                             )
@@ -482,5 +483,25 @@ class AuthViewModel : ViewModel() {
     fun logout(onLogoutSuccess: () -> Unit) {
         FirebaseAuth.getInstance().signOut()
         onLogoutSuccess()
+    }
+
+    // Fungsi untuk mendapatkan profile picture URL
+    fun getProfilePictureUrl(onSuccess: (String?) -> Unit, onError: (String) -> Unit) {
+        val userId = auth.currentUser?.uid
+        if (userId != null) {
+            firestore.collection("users").document(userId)
+                .get()
+                .addOnSuccessListener { document ->
+                    if (document.exists()) {
+                        val profilePicture = document.getString("profilePicture")
+                        onSuccess(profilePicture)
+                    } else {
+                        onError("User data not found")
+                    }
+                }
+                .addOnFailureListener { e -> onError(e.message ?: "Failed to get profile picture") }
+        } else {
+            onError("User not authenticated")
+        }
     }
 }

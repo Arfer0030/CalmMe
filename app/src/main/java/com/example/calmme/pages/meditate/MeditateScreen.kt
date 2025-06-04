@@ -1,5 +1,6 @@
 package com.example.calmme.pages.meditate
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -11,19 +12,41 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.calmme.R
+import com.example.calmme.pages.authentication.AuthViewModel
 
 @Composable
-fun MeditateScreen(navController: NavController) {
+fun MeditateScreen(navController: NavController, authViewModel: AuthViewModel) {
+    val context = LocalContext.current
+    var profilePictureUrl by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(Unit) {
+        authViewModel.getProfilePictureUrl(
+            onSuccess = { url ->
+                profilePictureUrl = url
+            },
+            onError = { error ->
+                Log.e("TopBar", "Failed to load profile picture: $error")
+            }
+        )
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -35,20 +58,39 @@ fun MeditateScreen(navController: NavController) {
             .padding(16.dp)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp, top = 8.dp),
-            horizontalArrangement = Arrangement.Start,
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 2.dp, bottom = 18.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_back),
                 contentDescription = "Back",
                 modifier = Modifier
+                    .size(24.dp)
                     .clickable {
                         navController.popBackStack()
                     }
             )
-            Spacer(modifier = Modifier.width(94.dp))
-            Text("Meditate Time", style = MaterialTheme.typography.headlineSmall)
+            Text(
+                text = "Meditate Time",
+                style = MaterialTheme.typography.headlineSmall
+            )
+            AsyncImage(
+                model = ImageRequest.Builder(context)
+                    .data(profilePictureUrl)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = "Profile",
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape),
+                placeholder = painterResource(id = R.drawable.profile),
+                error = painterResource(id = R.drawable.profile),
+                fallback = painterResource(id = R.drawable.profile),
+                contentScale = ContentScale.Crop
+            )
         }
 
         Image(

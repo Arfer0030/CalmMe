@@ -129,18 +129,18 @@ fun Application(
                 composable(Routes.History.route) { HistoryScreen() }
                 composable(Routes.Profile.route) { ProfileScreen(authViewModel) }
                 composable(Routes.Assesment.route) { AssesmentScreen() }
-                composable(Routes.InitAssesment.route) { InitAssestScreen() }
-                composable(Routes.DailyMood.route) { DailyMoodScreen(dailyMoodViewModel) }
-                composable(Routes.Subscribe.route) { SubscribeScreen(subscribeViewModel) }
-                composable(Routes.Payment.route) { PaymentScreen(subscribeViewModel)}
-                composable(Routes.Confirmation.route) { ConfirmationScreen(subscribeViewModel) }
-                composable(Routes.Meditate.route) { MeditateScreen(navController) }
+                composable(Routes.InitAssesment.route) { InitAssestScreen(authViewModel) }
+                composable(Routes.DailyMood.route) { DailyMoodScreen(dailyMoodViewModel, authViewModel) }
+                composable(Routes.Subscribe.route) { SubscribeScreen(subscribeViewModel, authViewModel) }
+                composable(Routes.Payment.route) { PaymentScreen(subscribeViewModel, authViewModel)}
+                composable(Routes.Confirmation.route) { ConfirmationScreen(subscribeViewModel, authViewModel) }
+                composable(Routes.Meditate.route) { MeditateScreen(navController, authViewModel) }
                 composable(
                     route = "music/{audioResId}",
                     arguments = listOf(navArgument("audioResId") { type = NavType.IntType })
                 ) { backStackEntry ->
                     val audioResId = backStackEntry.arguments?.getInt("audioResId") ?: 0
-                    MusicScreen(navController, audioResId)
+                    MusicScreen(navController, audioResId, authViewModel)
                 }
                 composable(Routes.EditProfile.route) {EditProfileScreen(authViewModel)}
                 composable(Routes.PsiEditProfile.route) { PsiEditProfileScreen() }
@@ -193,6 +193,8 @@ fun shouldShowBottomBar(): Boolean {
         Routes.Help.route,
         Routes.About.route,
         Routes.PaymentHistory.route,
+        Routes.Meditate.route,
+        "music/{audioResId}",
     )
 
     return currentRoute != null && currentRoute !in noBottomBarScreens
