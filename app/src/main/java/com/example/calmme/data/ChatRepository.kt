@@ -173,7 +173,7 @@ class ChatRepository {
         }
     }
 
-    // Cek
+    // Cek batas waktu appointment
     private fun isWithinChatTime(startTime: String?, endTime: String?): Boolean {
         return try {
             if (startTime.isNullOrEmpty() || endTime.isNullOrEmpty()) {
