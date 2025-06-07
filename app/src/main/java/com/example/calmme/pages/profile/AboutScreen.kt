@@ -105,7 +105,7 @@ fun AboutScreen() {
                 Text("Recognition", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_crown), // Ganti dengan icon bintang/verified
+                        painter = painterResource(id = R.drawable.ic_crown),
                         contentDescription = null,
                         tint = Color(0xFFF7CA18),
                         modifier = Modifier.size(16.dp)

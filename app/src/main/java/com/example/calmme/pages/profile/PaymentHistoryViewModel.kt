@@ -31,8 +31,6 @@ class PaymentHistoryViewModel : ViewModel() {
             _isLoading.value = true
             val userId = auth.currentUser?.uid ?: return@launch
             val resultList = mutableListOf<PaymentHistoryItem>()
-
-            // 1. Load Subscription Payments
             val subscriptions = firestore.collection("subscriptions")
                 .whereEqualTo("userId", userId)
                 .get()
@@ -40,13 +38,12 @@ class PaymentHistoryViewModel : ViewModel() {
 
             subscriptions.documents.forEach { subDoc ->
                 val planName = "SUBSCRIPTION"
-                val amount = "Rp 275.000,00" // Sesuaikan harga subscription Anda
+                val amount = "Rp 275.000,00"
                 val startTimestamp = subDoc.getTimestamp("startDate")
                 val endTimestamp = subDoc.getTimestamp("endDate")
                 val orderedOn = startTimestamp?.let { formatDate(it) } ?: "-"
                 val activeUntil = endTimestamp?.let { formatDate(it) } ?: "-"
 
-                // Cari payment yang terkait subscription ini
                 val payments = firestore.collection("payments")
                     .whereEqualTo("subscriptionId", subDoc.getString("subscriptionId"))
                     .whereEqualTo("userId", userId)
@@ -56,7 +53,6 @@ class PaymentHistoryViewModel : ViewModel() {
                     .await()
 
                 if (!payments.isEmpty) {
-                    // Tampilkan hanya payment yang sudah sukses
                     resultList.add(
                         PaymentHistoryItem(
                             planName = planName,
@@ -68,7 +64,6 @@ class PaymentHistoryViewModel : ViewModel() {
                 }
             }
 
-            // 2. Load BASIC (Consultation) Payments
             val payments = firestore.collection("payments")
                 .whereEqualTo("userId", userId)
                 .whereEqualTo("type", "consultation")
@@ -78,9 +73,8 @@ class PaymentHistoryViewModel : ViewModel() {
 
             payments.documents.forEach { payDoc ->
                 val planName = "BASIC"
-                val amount = "Rp 35.000,00" // Sesuaikan harga basic/consultation Anda
+                val amount = "Rp 50.000,00"
                 val orderedOn = payDoc.getTimestamp("createdAt")?.let { formatDate(it) } ?: "-"
-                // Untuk consultation, activeUntil bisa diisi sesuai kebutuhan (misal, 1 hari setelah orderedOn)
                 val activeUntil = payDoc.getTimestamp("createdAt")?.let {
                     formatDate(it, plusDays = 1)
                 } ?: "-"
@@ -95,7 +89,6 @@ class PaymentHistoryViewModel : ViewModel() {
                 )
             }
 
-            // Urutkan dari pembayaran terbaru ke terlama
             _paymentHistory.value = resultList.sortedByDescending { it.orderedOn }
             _isLoading.value = false
         }
