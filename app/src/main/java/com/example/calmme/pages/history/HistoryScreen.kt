@@ -58,8 +58,8 @@ fun HistoryScreen(
     val isLoading by historyViewModel.isLoading.collectAsState()
     val participantNames by historyViewModel.participantNames.collectAsState()
     val participantEmails by historyViewModel.participantEmails.collectAsState()
-    val participantProfilePictures by historyViewModel.participantProfilePictures.collectAsState() // ✅ Profile pictures
-    val currentUserProfilePicture by historyViewModel.currentUserProfilePicture.collectAsState() // ✅ Current user profile
+    val participantProfilePictures by historyViewModel.participantProfilePictures.collectAsState()
+    val currentUserProfilePicture by historyViewModel.currentUserProfilePicture.collectAsState()
 
     Box(
         modifier = Modifier
@@ -117,7 +117,7 @@ fun HistoryScreen(
                             appointment = appointment,
                             participantName = participantNames[appointment.appointmentId] ?: "",
                             participantEmail = participantEmails[appointment.appointmentId] ?: "",
-                            participantProfilePicture = participantProfilePictures[appointment.appointmentId], // ✅ Pass profile picture
+                            participantProfilePicture = participantProfilePictures[appointment.appointmentId],
                             onChatClick = { appointmentId, chatRoomId ->
                                 if (!chatRoomId.isNullOrEmpty()) {
                                     navController.navigate(Routes.Chat.createRoute(chatRoomId))
@@ -154,7 +154,7 @@ fun AppointmentCard(
     appointment: AppointmentData,
     participantName: String,
     participantEmail: String,
-    participantProfilePicture: String?, // ✅ Tambahkan parameter profile picture
+    participantProfilePicture: String?,
     onChatClick: (String, String?) -> Unit
 ) {
     val context = LocalContext.current
@@ -190,7 +190,6 @@ fun AppointmentCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    // ✅ Profile picture dengan Coil dan fallback
                     AsyncImage(
                         model = ImageRequest.Builder(context)
                             .data(participantProfilePicture)
@@ -222,7 +221,6 @@ fun AppointmentCard(
                     }
                 }
 
-                // ... rest of the card content remains the same
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Row(

@@ -32,7 +32,6 @@ class HistoryViewModel(
     private val _participantEmails = MutableStateFlow<Map<String, String>>(emptyMap())
     val participantEmails: StateFlow<Map<String, String>> = _participantEmails
 
-    // ✅ Tambahkan StateFlow untuk profile pictures
     private val _participantProfilePictures = MutableStateFlow<Map<String, String?>>(emptyMap())
     val participantProfilePictures: StateFlow<Map<String, String?>> = _participantProfilePictures
 
@@ -44,7 +43,6 @@ class HistoryViewModel(
         loadCurrentUserProfile()
     }
 
-    // ✅ Load profile picture user saat ini untuk top bar
     private fun loadCurrentUserProfile() {
         viewModelScope.launch {
             try {
@@ -53,7 +51,7 @@ class HistoryViewModel(
                 val profilePicture = userDoc.getString("profilePicture")
                 _currentUserProfilePicture.value = profilePicture
             } catch (e: Exception) {
-                // Handle error silently
+                //
             }
         }
     }
@@ -70,7 +68,7 @@ class HistoryViewModel(
                 val appointmentsList = mutableListOf<AppointmentData>()
                 val namesMap = mutableMapOf<String, String>()
                 val emailsMap = mutableMapOf<String, String>()
-                val profilePicturesMap = mutableMapOf<String, String?>() // ✅ Map untuk profile pictures
+                val profilePicturesMap = mutableMapOf<String, String?>()
 
                 if (role == "psychologist") {
                     val psychologistQuery = firestore.collection("psychologists")
@@ -84,7 +82,6 @@ class HistoryViewModel(
 
                         val appointmentsQuery = firestore.collection("appointments")
                             .whereEqualTo("psychologistId", psychologistId)
-                            .orderBy("createdAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
                             .get()
                             .await()
 
@@ -97,18 +94,17 @@ class HistoryViewModel(
                                 val patientDoc = firestore.collection("users").document(patientId).get().await()
                                 val patientEmail = patientDoc.getString("email") ?: ""
                                 val patientUsername = patientDoc.getString("username") ?: "Patient"
-                                val patientProfilePicture = patientDoc.getString("profilePicture") // ✅ Load profile picture
+                                val patientProfilePicture = patientDoc.getString("profilePicture")
 
                                 namesMap[appointment.appointmentId] = patientUsername
                                 emailsMap[appointment.appointmentId] = patientEmail
-                                profilePicturesMap[appointment.appointmentId] = patientProfilePicture // ✅ Simpan profile picture
+                                profilePicturesMap[appointment.appointmentId] = patientProfilePicture
                             }
                         }
                     }
                 } else {
                     val appointmentsQuery = firestore.collection("appointments")
                         .whereEqualTo("userId", userId)
-                        .orderBy("createdAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
                         .get()
                         .await()
 
@@ -122,7 +118,6 @@ class HistoryViewModel(
                             val psychologistName = psychologistDoc.getString("name") ?: "Psychologist"
                             val psychologistEmail = psychologistDoc.getString("email") ?: ""
 
-                            // ✅ Load profile picture psikolog dari users collection menggunakan userId
                             val psychologistUserId = psychologistDoc.getString("userId")
                             var psychologistProfilePicture: String? = null
                             if (!psychologistUserId.isNullOrEmpty()) {
@@ -133,15 +128,20 @@ class HistoryViewModel(
 
                             namesMap[appointment.appointmentId] = psychologistName
                             emailsMap[appointment.appointmentId] = psychologistEmail
-                            profilePicturesMap[appointment.appointmentId] = psychologistProfilePicture // ✅ Simpan profile picture
+                            profilePicturesMap[appointment.appointmentId] = psychologistProfilePicture
                         }
                     }
                 }
 
+                val sortedAppointments = appointmentsList.sortedByDescending {
+                    it.appointmentDate
+                }
+
+                _appointments.value = sortedAppointments
                 _appointments.value = appointmentsList
                 _participantNames.value = namesMap
                 _participantEmails.value = emailsMap
-                _participantProfilePictures.value = profilePicturesMap // ✅ Set profile pictures
+                _participantProfilePictures.value = profilePicturesMap
                 _isLoading.value = false
 
             } catch (e: Exception) {
