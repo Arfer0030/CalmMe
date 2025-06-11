@@ -37,20 +37,6 @@ class DailyMoodViewModel(application: Application) : AndroidViewModel(applicatio
     init {
         loadTodaysMood()
         loadMoodHistory()
-        if (BuildConfig.DEBUG) {
-            debugDataStore()
-        }
-    }
-
-    private fun debugDataStore() {
-        viewModelScope.launch {
-            moodDataStore.context.moodDataStore.data.collect { preferences ->
-                Log.d("MoodDataStore", "DataStore size: ${preferences.asMap().size}")
-                preferences.asMap().forEach { (key, value) ->
-                    Log.d("MoodDataStore", "${key.name}: $value")
-                }
-            }
-        }
     }
 
     fun selectMood(mood: String) {
@@ -105,12 +91,10 @@ class DailyMoodViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun calculateStreakFromHistory(history: List<MoodEntry>): Int {
         if (history.isEmpty()) return 0
-
         val sortedHistory = history.sortedByDescending { it.date }
         var streak = 0
         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         val cal = Calendar.getInstance()
-
         var currentDate = dateFormat.format(Date())
 
         for (i in 0 until 365) {
@@ -125,7 +109,6 @@ class DailyMoodViewModel(application: Application) : AndroidViewModel(applicatio
                 break
             }
         }
-
         return streak
     }
 
@@ -134,7 +117,6 @@ class DailyMoodViewModel(application: Application) : AndroidViewModel(applicatio
         val cal = Calendar.getInstance()
         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         val dayFormat = SimpleDateFormat("EEE dd", Locale.getDefault())
-
         val recentMoods = mutableListOf<Pair<String, String>>()
 
         for (i in days - 1 downTo 0) {
@@ -142,13 +124,10 @@ class DailyMoodViewModel(application: Application) : AndroidViewModel(applicatio
             cal.add(Calendar.DAY_OF_MONTH, -i)
             val date = dateFormat.format(cal.time)
             val dayString = dayFormat.format(cal.time)
-
             val moodEntry = moodHistory.find { it.date == date }
             val mood = moodEntry?.mood ?: "empty"
-
             recentMoods.add(dayString to mood)
         }
-
         return recentMoods
     }
 
@@ -173,11 +152,9 @@ class DailyMoodViewModel(application: Application) : AndroidViewModel(applicatio
         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         val startDateStr = dateFormat.format(startDate)
         val endDateStr = dateFormat.format(endDate)
-
         val filteredHistory = moodHistory.filter { entry ->
             entry.date >= startDateStr && entry.date <= endDateStr
         }
-
         val moodCounts = filteredHistory.groupingBy { it.mood }.eachCount()
 
         return moods.map { (mood, _) ->

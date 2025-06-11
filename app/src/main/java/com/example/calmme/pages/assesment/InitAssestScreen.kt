@@ -60,7 +60,7 @@ fun InitAssestScreen(authViewModel: AuthViewModel){
             )
     ) {
         InitAssestTopBar(navController, authViewModel)
-        Spacer(modifier = Modifier.height(42.dp))
+        Spacer(modifier = Modifier.height(28.dp))
         BannerAssests(navController)
     }
 }

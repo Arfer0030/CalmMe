@@ -89,6 +89,12 @@ fun HomeScreen(
         }
     }
 
+    LaunchedEffect(user) {
+        user?.uid?.let { userId ->
+            authViewModel.checkAndUpdateSubscriptionStatus(userId)
+        }
+    }
+
     Box(
         modifier
             .background(

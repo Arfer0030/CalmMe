@@ -7,6 +7,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.EmailAuthProvider
+import kotlinx.coroutines.tasks.await
+import java.util.Calendar
 
 class AuthViewModel : ViewModel() {
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
@@ -502,6 +504,51 @@ class AuthViewModel : ViewModel() {
                 .addOnFailureListener { e -> onError(e.message ?: "Failed to get profile picture") }
         } else {
             onError("User not authenticated")
+        }
+    }
+
+    suspend fun checkAndUpdateSubscriptionStatus(
+        userId: String,
+        onStatusUpdated: ((Boolean) -> Unit)? = null
+    ) {
+        val firestore = FirebaseFirestore.getInstance()
+        try {
+            val userDoc = firestore.collection("users").document(userId).get().await()
+            val subscriptionEndDate = userDoc.getTimestamp("subscriptionEndDate")
+            val subscriptionStatus = userDoc.getString("subscriptionStatus") ?: "inactive"
+
+            if (subscriptionStatus == "active" && subscriptionEndDate != null) {
+                val todayCal = Calendar.getInstance().apply {
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }
+                val endCal = Calendar.getInstance().apply {
+                    time = subscriptionEndDate.toDate()
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }
+
+                if (todayCal.time == endCal.time) {
+                    firestore.collection("users").document(userId)
+                        .update(
+                            mapOf(
+                                "subscriptionStatus" to "inactive",
+                                "subscriptionStartDate" to "",
+                                "subscriptionEndDate" to ""
+                            )
+                        )
+                        .await()
+                    onStatusUpdated?.invoke(true)
+                    return
+                }
+            }
+            onStatusUpdated?.invoke(false)
+        } catch (e: Exception) {
+            onStatusUpdated?.invoke(false)
         }
     }
 }
