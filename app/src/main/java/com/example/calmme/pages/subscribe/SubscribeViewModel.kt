@@ -59,6 +59,14 @@ class SubscribeViewModel : ViewModel() {
         onError: (String) -> Unit
     ) {
         try {
+            val userDoc = firestore.collection("users").document(userId).get().await()
+            val subscriptionStatus = userDoc.getString("subscriptionStatus") ?: "inactive"
+            if (subscriptionStatus == "active") {
+                _isLoading.value = false
+                onError("You already have an active subscription")
+                return
+            }
+
             val subscriptionId = UUID.randomUUID().toString()
             val paymentId = UUID.randomUUID().toString()
 
@@ -88,8 +96,7 @@ class SubscribeViewModel : ViewModel() {
                 "createdAt" to Timestamp.now()
             )
 
-            firestore.collection("subscriptions").document(subscriptionId).set(subscriptionData)
-                .await()
+            firestore.collection("subscriptions").document(subscriptionId).set(subscriptionData).await()
             firestore.collection("payments").document(paymentId).set(paymentData).await()
 
             _isLoading.value = false
@@ -100,6 +107,7 @@ class SubscribeViewModel : ViewModel() {
             onError(e.message ?: "Failed to process subscription")
         }
     }
+
 
     private suspend fun processConsultationPayment(
         userId: String,
@@ -117,7 +125,7 @@ class SubscribeViewModel : ViewModel() {
 
             if (appointmentsQuery.isEmpty) {
                 _isLoading.value = false
-                onError("No pending appointments found. Please book an appointment first.")
+                onError("Please book an appointment first.")
                 return
             }
 
@@ -142,6 +150,7 @@ class SubscribeViewModel : ViewModel() {
             onError(e.message ?: "Failed to process consultation payment")
         }
     }
+
 
     suspend fun updatePaymentMethod(
         paymentMethod: String,
@@ -316,6 +325,9 @@ class SubscribeViewModel : ViewModel() {
                 .update("status", "success")
                 .await()
 
+            var startDate: Timestamp? = null
+            var endDate: Timestamp? = null
+
             if (subscriptionId != null) {
                 val subscriptionsQuery = firestore.collection("subscriptions")
                     .whereEqualTo("subscriptionId", subscriptionId)
@@ -328,16 +340,20 @@ class SubscribeViewModel : ViewModel() {
                     firestore.collection("subscriptions").document(subscriptionDoc.id)
                         .update("status", "active")
                         .await()
+                    startDate = subscriptionDoc.getTimestamp("startDate")
+                    endDate = subscriptionDoc.getTimestamp("endDate")
                 }
             }
 
+            val updateMap = mutableMapOf<String, Any>(
+                "subscriptionStatus" to "active",
+                "updatedAt" to Timestamp.now()
+            )
+            startDate?.let { updateMap["subscriptionStartDate"] = it }
+            endDate?.let { updateMap["subscriptionEndDate"] = it }
+
             firestore.collection("users").document(userId)
-                .update(
-                    mapOf(
-                        "subscriptionStatus" to "active",
-                        "updatedAt" to Timestamp.now()
-                    )
-                )
+                .update(updateMap)
                 .await()
 
             updateUserAppointmentsToPaid(userId)
@@ -348,6 +364,7 @@ class SubscribeViewModel : ViewModel() {
             onError("Failed to finalize subscription payment: ${e.localizedMessage}")
         }
     }
+
 
     private suspend fun finalizeConsultationPayment(
         userId: String,
@@ -434,6 +451,5 @@ class SubscribeViewModel : ViewModel() {
         } catch (_: Exception) {
         }
     }
-
 }
 

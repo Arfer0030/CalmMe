@@ -32,6 +32,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,6 +55,7 @@ import com.example.calmme.commons.LocalNavController
 import com.example.calmme.commons.Routes
 import com.example.calmme.data.PsychologistData
 import com.example.calmme.data.TimeSlot
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun ConsultationScreen(consultationViewModel: ConsultationViewModel) {
@@ -65,6 +67,11 @@ fun ConsultationScreen(consultationViewModel: ConsultationViewModel) {
 
     var searchText by remember { mutableStateOf("") }
     var selectedSpecialization by remember { mutableStateOf("") }
+    val user = FirebaseAuth.getInstance().currentUser
+
+    LaunchedEffect(user?.uid) {
+        consultationViewModel.loadCurrentUserProfile()
+    }
 
     Column(
         modifier = Modifier

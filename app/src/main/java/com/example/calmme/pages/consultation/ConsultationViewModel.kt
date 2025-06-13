@@ -52,7 +52,7 @@ class ConsultationViewModel(
         loadCurrentUserProfile()
     }
 
-    private fun loadCurrentUserProfile() {
+    fun loadCurrentUserProfile() {
         viewModelScope.launch {
             try {
                 val userId = auth.currentUser?.uid ?: return@launch

@@ -166,11 +166,10 @@ fun SubscribeScreen(viewModel: SubscribeViewModel, authViewModel: AuthViewModel)
                     coroutineScope.launch {
                         viewModel.processPayment(
                             onSuccess = {
-                                Toast.makeText(context, "Subscription created successfully!", Toast.LENGTH_SHORT).show()
                                 navController.navigate(Routes.Payment.route)
                             },
                             onError = { error ->
-                                Toast.makeText(context, "Failed to create subscription: $error", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, "Failed to process: $error", Toast.LENGTH_LONG).show()
                             }
                         )
                     }
