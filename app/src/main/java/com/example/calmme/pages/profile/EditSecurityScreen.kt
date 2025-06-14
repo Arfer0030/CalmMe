@@ -228,8 +228,11 @@ fun EditSecurityScreen(authViewModel: AuthViewModel) {
             authViewModel = authViewModel,
             onDismiss = {
                 showEmailVerificationDialog = false
-                navController.navigate(Routes.Authentication.route) {
-                    popUpTo(0) { inclusive = true }
+                authViewModel.logout {
+                    Toast.makeText(context, "Please sign in with your new email", Toast.LENGTH_LONG).show()
+                    navController.navigate(Routes.Authentication.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             }
         )
@@ -403,11 +406,8 @@ fun EmailVerificationDialog(
     onDismiss: () -> Unit,
     authViewModel: AuthViewModel
 ) {
-    val context = LocalContext.current
-    var isChecking by remember { mutableStateOf(false) }
-
     AlertDialog(
-        onDismissRequest = { },
+        onDismissRequest = {  },
         title = {
             Text(
                 text = "Email Verification Sent",
@@ -416,7 +416,7 @@ fun EmailVerificationDialog(
         },
         text = {
             Column {
-                Text("A verification email has been sent to:")
+                Text("A verification link has been sent to:")
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = newEmail,
@@ -424,10 +424,10 @@ fun EmailVerificationDialog(
                     color = Color(0xFF8E44AD)
                 )
                 Spacer(modifier = Modifier.height(16.dp))
-                Text("Please check your email and click the verification link to complete the email change.")
+                Text("Please check your email and click the verification link to complete the change.")
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Note: You will be signed out after verification is complete.",
+                    text = "You will be signed out now. Please sign in again with your new email after verification.",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Red,
                     fontWeight = FontWeight.Bold
@@ -436,62 +436,10 @@ fun EmailVerificationDialog(
         },
         confirmButton = {
             Button(
-                onClick = {
-                    isChecking = true
-                    authViewModel.checkEmailUpdateStatus(
-                        onEmailUpdated = { updatedEmail, userId ->
-                            if (updatedEmail == newEmail) {
-                                authViewModel.handleEmailVerificationComplete(
-                                    newEmail = newEmail,
-                                    onSuccess = {
-                                        isChecking = false
-                                        Toast.makeText(
-                                            context,
-                                            "Email updated successfully! Please sign in with your new email.",
-                                            Toast.LENGTH_LONG
-                                        ).show()
-                                        onDismiss()
-                                    },
-                                    onError = { error ->
-                                        isChecking = false
-                                        Toast.makeText(context, "Error: $error", Toast.LENGTH_LONG).show()
-                                    }
-                                )
-                            } else {
-                                isChecking = false
-                                Toast.makeText(
-                                    context,
-                                    "Email not yet verified. Please check your email and click the verification link.",
-                                    Toast.LENGTH_LONG
-                                ).show()
-                            }
-                        },
-                        onError = { error ->
-                            isChecking = false
-                            if (error.contains("User not found")) {
-                                Toast.makeText(
-                                    context,
-                                    "Email verification completed! Please sign in with your new email.",
-                                    Toast.LENGTH_LONG
-                                ).show()
-                                onDismiss()
-                            } else {
-                                Toast.makeText(context, "Error: $error", Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                    )
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8E44AD)),
-                enabled = !isChecking
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8E44AD))
             ) {
-                if (isChecking) {
-                    CircularProgressIndicator(
-                        color = Color.White,
-                        modifier = Modifier.size(16.dp)
-                    )
-                } else {
-                    Text("Check Status", color = Color.White)
-                }
+                Text("OK", color = Color.White)
             }
         }
     )

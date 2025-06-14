@@ -408,60 +408,6 @@ class AuthViewModel : ViewModel() {
             }
     }
 
-    // Buat ngecek status email update
-    fun checkEmailUpdateStatus(
-        onEmailUpdated: (String, String) -> Unit,
-        onError: (String) -> Unit
-    ) {
-        val user = auth.currentUser
-        if (user != null) {
-            user.reload().addOnCompleteListener { reloadTask ->
-                if (reloadTask.isSuccessful) {
-                    val currentEmail = user.email
-                    val userId = user.uid
-                    if (currentEmail != null) {
-                        onEmailUpdated(currentEmail, userId)
-                    } else {
-                        onError("Email not found")
-                    }
-                } else {
-                    onError("Failed to reload user data")
-                }
-            }
-        } else {
-            onError("User not found - please sign in again")
-        }
-    }
-
-    // Buat handle setelah email verification
-    fun handleEmailVerificationComplete(
-        newEmail: String,
-        onSuccess: () -> Unit,
-        onError: (String) -> Unit
-    ) {
-        val user = auth.currentUser
-        if (user != null) {
-            user.reload().addOnCompleteListener { reloadTask ->
-                if (reloadTask.isSuccessful && user.isEmailVerified) {
-                    updateEmailInFirestore(
-                        userId = user.uid,
-                        newEmail = newEmail,
-                        onSuccess = {
-                            logout {
-                                onSuccess()
-                            }
-                        },
-                        onError = onError
-                    )
-                } else {
-                    onError("Email verification not completed yet")
-                }
-            }
-        } else {
-            onError("User session expired - please sign in again")
-        }
-    }
-
     // Buat ambil data user
     fun getUserData(onSuccess: (Map<String, Any>) -> Unit, onError: (String) -> Unit) {
         val userId = auth.currentUser?.uid
