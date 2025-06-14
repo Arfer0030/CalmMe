@@ -138,7 +138,6 @@ class HistoryViewModel(
                 }
 
                 _appointments.value = sortedAppointments
-                _appointments.value = appointmentsList
                 _participantNames.value = namesMap
                 _participantEmails.value = emailsMap
                 _participantProfilePictures.value = profilePicturesMap
