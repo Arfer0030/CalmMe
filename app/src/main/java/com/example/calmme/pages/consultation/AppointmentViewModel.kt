@@ -1,5 +1,8 @@
 package com.example.calmme.pages.consultation
 
+import android.text.format.DateUtils.isToday
+import java.text.SimpleDateFormat
+import java.util.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.calmme.data.PsikologRepository
@@ -143,11 +146,42 @@ class AppointmentViewModel(
                 timeRange !in bookedTimeSlots
             }
 
-            _availableTimeSlots.value = availableSlots
+            val finalAvailableSlots = if (isToday(date)) {
+                filterPastTimeSlots(availableSlots)
+            } else {
+                availableSlots
+            }
+
+            _availableTimeSlots.value = finalAvailableSlots
 
         } catch (e: Exception) {
             _availableTimeSlots.value = allTimeSlots
             _errorMessage.value = "Could not filter booked slots: ${e.message}"
+        }
+    }
+
+    private fun isToday(date: String): Boolean {
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        return date == today
+    }
+
+    private fun filterPastTimeSlots(timeSlots: List<TimeSlot>): List<TimeSlot> {
+        val currentTime = Calendar.getInstance()
+        val currentHour = currentTime.get(Calendar.HOUR_OF_DAY)
+        val currentMinute = currentTime.get(Calendar.MINUTE)
+        val currentTimeInMinutes = currentHour * 60 + currentMinute
+
+        return timeSlots.filter { timeSlot ->
+            try {
+                val startTimeParts = timeSlot.startTime.split(":")
+                val startHour = startTimeParts[0].toInt()
+                val startMinute = startTimeParts[1].toInt()
+                val startTimeInMinutes = startHour * 60 + startMinute
+
+                startTimeInMinutes > (currentTimeInMinutes + 15)
+            } catch (e: Exception) {
+                true
+            }
         }
     }
 
@@ -208,7 +242,6 @@ class AppointmentViewModel(
                 }
             }
         }
-
         _workingHours.value = workingHoursMap
     }
 
