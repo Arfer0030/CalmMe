@@ -15,7 +15,7 @@ Features:
 - Assessment Test – A stress level checker based on a series of psychological questions.
 - Daily Mood Tracker – Record daily mood and view emotional trends over time.
 
-Tech Stack
+Tech Stack:
 - Jetpack Compose – Modern declarative UI toolkit for Android.
 - Firebase – Authentication, Realtime Database, and Storage.
 - MediaPlayer API – Used for in-app music playback.
