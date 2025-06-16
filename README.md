@@ -25,7 +25,7 @@ This project aims to provide accessible mental health tools for people who may f
 ## Setup & Installation
 Clone the repository:
 ```bash
-- git clone https://github.com/Arfer0030/calmme-android.git
+- git clone https://github.com/Arfer0030/calmme.git
 - Open in Android Studio.
 - Ensure Firebase project is configured correctly in google-services.json.
 - Build and run on an emulator or physical device.
