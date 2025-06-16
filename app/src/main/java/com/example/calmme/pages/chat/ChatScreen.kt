@@ -190,7 +190,8 @@ fun ChatScreen(
             items(messages) { message ->
                 ChatItem(
                     message = message,
-                    isCurrentUser = message.senderId == currentUserId
+                    isCurrentUser = message.senderId == currentUserId,
+                    profilePictureUrl = otherUserProfilePicture
                 )
             }
         }
@@ -259,8 +260,10 @@ fun ChatScreen(
 @Composable
 fun ChatItem(
     message: ChatMessage,
-    isCurrentUser: Boolean
+    isCurrentUser: Boolean,
+    profilePictureUrl: String? = null
 ) {
+    val context = LocalContext.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -268,20 +271,20 @@ fun ChatItem(
         horizontalArrangement = if (isCurrentUser) Arrangement.End else Arrangement.Start
     ) {
         if (!isCurrentUser) {
-            Box(
+            AsyncImage(
+                model = ImageRequest.Builder(context)
+                    .data(profilePictureUrl)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = "Sender Profile",
                 modifier = Modifier
                     .size(32.dp)
-                    .clip(CircleShape)
-                    .background(Color.Gray),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.profile),
-                    contentDescription = "Profile",
-                    modifier = Modifier.size(20.dp),
-                    tint = Color.White
-                )
-            }
+                    .clip(CircleShape),
+                placeholder = painterResource(id = R.drawable.profile),
+                error = painterResource(id = R.drawable.profile),
+                fallback = painterResource(id = R.drawable.profile),
+                contentScale = ContentScale.Crop
+            )
             Spacer(modifier = Modifier.width(8.dp))
         }
 

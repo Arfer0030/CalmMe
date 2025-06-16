@@ -727,10 +727,10 @@ fun generateAvailableDates(): List<Pair<String, String>> {
 
     // Generate 7 hari
     for (i in 1..7) {
-        calendar.add(Calendar.DAY_OF_MONTH, 1)
         val dateString = dateFormat.format(calendar.time)
         val dayString = dayFormat.format(calendar.time)
         dates.add(dateString to dayString)
+        calendar.add(Calendar.DAY_OF_MONTH, 1)
     }
 
     return dates
